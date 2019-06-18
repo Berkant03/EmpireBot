@@ -1,3 +1,6 @@
+#Made by Berkant03
+#Email: berkantpalazoglu03@gmail.com
+
 import discord
 from discord.utils import get
 import time
