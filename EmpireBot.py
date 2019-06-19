@@ -127,6 +127,14 @@ rol = {"Dunkelritter":587376791170187274,"Samurai":587376876184666123,"Römer":5
 festungen = {"dunkelBurg":"Dunkelritter","palast":"Samurai","rom":"Römer","kirche":"Mystischer Orden","wälder das pantheon":"Ureinwohner",
 "pyramide":"Ägypter","boot":"Piraten","bergfort":"Wilder Bergstamm","eiskappen":"Nordmänner"}
 
+def log(person_name,person_id,command,channel_name,datum): #command zeigt die volle message, datum als datetime.datetime object
+    global cursor
+    datum = datum.split(" ")
+    tag = datum[0]
+    uhrzeit = datum[1][:5]
+    cursor.execute("INSERT INTO logs VALUES (?,?,?,?,?,?)",[person_name,person_id,command,channel,tag,uhrzeit])
+    
+
 async def kickcheck(fraktion):
     return 
 
