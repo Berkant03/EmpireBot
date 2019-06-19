@@ -129,11 +129,29 @@ festungen = {"dunkelBurg":"Dunkelritter","palast":"Samurai","rom":"Römer","kirc
 
 def log(person_name,person_id,command,channel_name,datum): #command zeigt die volle message, datum als datetime.datetime object
     global cursor
-    datum = datum.split(" ")
+    datum = datum.split()
     tag = datum[0]
     uhrzeit = datum[1][:5]
     cursor.execute("INSERT INTO logs VALUES (?,?,?,?,?,?)",[person_name,person_id,command,channel,tag,uhrzeit])
-    
+
+def leiter_wechsel(fraktion,leiter_id): #Wenn sich der Leiter einer Stadt ändert
+    global cursor
+    cursor.execute("UPDATE fraktionen SET leiter_id = ? WHERE fraktion = ?",[leiter_id,fraktion])
+
+def festung_einnahme(festung,fraktion): #Wenn eine Basis eingenommen wird. "fraktion" ist der neue Besitzer der Stadt
+    global cursor
+    cursor.execute("UPDATE festungen SET fraktion = ? WHERE festung = ?",[fraktion,festung])
+
+def invasion_ankündigung(festung,angreifer_fraktion,verteidiger_fraktion,datum): #datum als datetime.datetime object
+    global cursor
+    datum = datum.split()
+    tag = datum[0]
+    uhrzeit = datum[1][:5]
+    cursor.execute("INSERT INTO invasion VALUES (?,?,?,?,?)",[festung,angreifer_fraktion,verteidiger_fraktion,tag,uhrzeit])
+
+def festungen():
+    cursor.execute("SELECT festung FROM festungen")
+    return cursor.fetchall()
 
 async def kickcheck(fraktion):
     return 
