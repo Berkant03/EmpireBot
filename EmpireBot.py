@@ -17,79 +17,6 @@ TOKEN = 'Your Token'
 
 fraktionen = {"Dunkelritter":587938986262265859,"Wilder Bergstamm":587938913092370442,"Mystischer Orden":587939070353735730,"Nordmänner":587938861116817411,"Piraten":587939283701334016,"Ägypter":587939233902362634,"Ureinwohner":587939210644815882,"Römer":587939310414725140,"Samurai":587938954859249696}
 allFractions = ["Dunkelritter","Wilder Bergstamm","Mystischer Orden","Nordmänner","Piraten","Ägypter","Ureinwohner","Römer","Samurai"]
-nachricht = {"Dunkelritter":"""Willkommen bei den Dunkelrittern!:racehorse:
-Du bist einer dunklen Fraktion beigetreten welche in der nord-östlichen Zone des Kontinents lebt.
-Verhalte dich wie ein Dunkelritter du kannst natürlich auch ein Knappe oder ein Magier sein! :black_heart:
-
-Das hier ist ein Fulltime Roleplay Projekt das heißt ihr spielt einen Charakter. 
-Welche Eigenschaften der Charakter hat ist euch überlassen. Ihr dürft also euch selbst spielen 
-ABER beachtet das ihr in einer Fraktion seid und ihr euch wie ein Ritter/Knappe/Magier benehmen müsst!
-Viel Spaß im Projekt! Auf eine dunkle Zeit!:racehorse:""",
-"Wilder Bergstamm":"""Willkommen beim Wilden Bergstamm!:mount_fuji:
-Du bist einer wilden Fraktion beigetreten welche in der nördlichen Zone des Kontinents lebt.
-Verhalte dich wie ein Bewohner eines Wilden Stammes! :bear:
-
-Das hier ist ein Fulltime Roleplay Projekt das heißt ihr spielt einen Charakter. 
-Welche Eigenschaften der Charakter hat ist euch überlassen. Ihr dürft also euch selbst spielen 
-ABER beachtet das ihr in einer Fraktion seid und ihr euch wie ein Wilder benehmen müsst!
-Viel Spaß im Projekt! Auf ein bergiges Fest!:mount_fuji:""",
-"Mystischer Orden":"""Willkommen bei dem mystischen Orden!:church:
-Du bist einer geheimnisvollen Fraktion beigetreten welche in der Mitte des Kontinents lebt.
-Verhalte dich entweder wie ein Händler Söldner oder Priester! ✝️
-
-Das hier ist ein Fulltime Roleplay Projekt das heißt ihr spielt einen Charakter. 
-Welche Eigenschaften der Charakter hat ist euch überlassen. Ihr dürft also euch selbst spielen 
-ABER beachtet das ihr in einer Fraktion seid und ihr euch wie ein Händler/Söldner/Priester benehmen müsst!
-Auf ein spannendes Projekt!:church:""",
-"Nordmänner":"""Willkommen bei den Nordmännern!❄️
-Du bist einer eisigen Fraktion beigetreten welche im Norden des Kontinents lebt.
-Verhalte dich wie ein Nordmann! :santa: 
-
-Das hier ist ein Fulltime Roleplay Projekt das heißt ihr spielt einen Charakter. 
-Welche Eigenschaften der Charakter hat ist euch überlassen. Ihr dürft also euch selbst spielen 
-ABER beachtet das ihr in einer Fraktion seid und ihr euch wie ein Nordmann benehmen müsst!
-Viel Spaß im Projekt! Auf ein eisiges Fest! ❄️""",
-"Piraten":"""Willkommen bei den Piraten!:skull:
-Du bist einer trinkenden Fraktion beigetreten welche außerhalb des Kontinents auf einer steinigen Insel lebt.
-Verhalte dich wie ein Pirat!
-
-Das hier ist ein Fulltime Roleplay Projekt das heißt ihr spielt einen Charakter. 
-Welche Eigenschaften der Charakter hat ist euch überlassen. Ihr dürft also euch selbst spielen 
-ABER beachtet das ihr in einer Fraktion seid und ihr euch wie ein Pirat benehmen müsst!
-Sonst geht es auf die Planke!
-Viel Spaß im Projekt! Arrr!:skull:""",
-"Ägypter":"""Willkommen bei den Ägyptern!:sun_with_face:
-Du bist einer weisen Fraktion beigetreten welche im Süden des Kontinents lebt.
-Verhalte dich wie ein Ägypter! :small_red_triangle:
-
-Das hier ist ein Fulltime Roleplay Projekt das heißt ihr spielt einen Charakter. 
-Welche Eigenschaften der Charakter hat ist euch überlassen. Ihr dürft also euch selbst spielen 
-ABER beachtet das ihr in einer Fraktion seid und ihr euch wie ein Ägypter benehmen müsst!
-Viel Spaß im Projekt! Die Pyramiden sind mit dir!:sun_with_face:""",
-"Ureinwohner":"""Willkommen bei den Ureinwohnern!:palm_tree:
-Du bist einer alten und wilden Fraktion beigetreten welche in der süd-westlichen Zone des Kontinents lebt.
-Verhalte dich wie ein Ureinwohner! :see_no_evil:
-
-Das hier ist ein Fulltime Roleplay Projekt das heißt ihr spielt einen Charakter. 
-Welche Eigenschaften der Charakter hat ist euch überlassen. Ihr dürft also euch selbst spielen 
-ABER beachtet das ihr in einer Fraktion seid und ihr euch wie ein Ureinwohner benehmen müsst!
-Viel Spaß im Projekt! Gepriesen sei der Baum!:palm_tree:""",
-"Samurai":"""Willkommen bei den Samurai!:japanese_castle:
-Du bist einer edlen Fraktion beigetreten welche im Westen des Kontinents lebt.
-Verhalte dich wie ein Samurai! :dragon:
-
-Das hier ist ein Fulltime Roleplay Projekt das heißt ihr spielt einen Charakter. 
-Welche Eigenschaften der Charakter hat ist euch überlassen. Ihr dürft also euch selbst spielen 
-ABER beachtet das ihr in einer Fraktion seid und ihr euch wie ein Samurai benehmen müsst!
-Viel Spaß im Projekt! Auf das Jahr des Hundes!:japanese_castle:""",
-"Römer":"""Willkommen bei den Römern!:ocean:
-Du bist einer eigentlich friedlichen Fraktion beigetreten welche im süd-östlichen des Kontinents lebt.
-Verhalte dich wie ein Römer!
-
-Das hier ist ein Fulltime Roleplay Projekt das heißt ihr spielt einen Charakter. 
-Welche Eigenschaften der Charakter hat ist euch überlassen. Ihr dürft also euch selbst spielen 
-ABER beachtet das ihr in einer Fraktion seid und ihr euch wie ein Römer benehmen müsst!
-Viel Spaß im Projekt! Auf eine friedliche oder düstere Zeit!:ocean:"""}
 
 conn = sqlite3.connect('empire.db')
 cursor = conn.cursor()
@@ -150,8 +77,14 @@ def invasion_ankündigung(festung,angreifer_fraktion,verteidiger_fraktion,datum)
     cursor.execute("INSERT INTO invasion VALUES (?,?,?,?,?)",[festung,angreifer_fraktion,verteidiger_fraktion,tag,uhrzeit])
 
 def festungen():
+    global cursor
     cursor.execute("SELECT festung FROM festungen")
     return cursor.fetchall()
+
+def fraktions_nachricht(fraktion): #Holt die Nachricht zu diesem fraktionsnamen raus
+    global cursor
+    cursor.execute("SELECT nachricht FROM fraktionen WHERE fraktion = ?",fraktion)
+    return cursor.fetchone()[0]
 
 async def kickcheck(fraktion):
     return 
