@@ -1,4 +1,4 @@
-#Made by Berkant03
+#Made by Berkant03 and MisterL2
 #Email: berkantpalazoglu03@gmail.com
 
 import discord
@@ -9,6 +9,9 @@ import asyncio
 import simplejson
 import datetime
 import math
+import pyutil
+import re
+import sqlite3
 
 TOKEN = 'Your Token'
 
@@ -86,7 +89,11 @@ Verhalte dich wie ein Römer!
 Das hier ist ein Fulltime Roleplay Projekt das heißt ihr spielt einen Charakter. 
 Welche Eigenschaften der Charakter hat ist euch überlassen. Ihr dürft also euch selbst spielen 
 ABER beachtet das ihr in einer Fraktion seid und ihr euch wie ein Römer benehmen müsst!
-Viel Spaß im Projekt! Auf eine friedliche oder düstere  Zeit!:ocean:"""}
+Viel Spaß im Projekt! Auf eine friedliche oder düstere Zeit!:ocean:"""}
+
+conn = sqlite3.connect('empire.db')
+cursor = conn.cursor()
+
 
 leiter = [587649118978179072,587648048641867776,587648225360740384,587648422761463818,587648931920347136,587648869551308801,587648819680903171,587648591548383232,587648705990098947]
 #Eisiger Mensch,Stammes Häuptling,Piratenkönig, Sultan,Ältester,Hoher Priester,König des Küstenvolkes,König der Dunkelritter,Kaiser
@@ -301,46 +308,35 @@ class MyClient(discord.Client):
             await message.channel.send("10 Sekunden sind um")
         
         if message.content.lower() == "!fraktionsverteilung":
-            dunkelritter = 0
-            wilderBergstamm = 0
-            mystischerOrden = 0
-            nordmanner = 0
-            piraten = 0
-            agypter = 0
-            ureinwohner = 0
-            romer = 0
-            samurai = 0
+            global fraktionen
+            rollenanzahl = {name:0 for name in fraktionen.keys()}
+            
             for member in message.guild.members:
-                #print(member)
-                #frl = [z.id for z in member.roles]
-                #print(frl)
-                if rollencheck(rol["Dunkelritter"],member):
-                    dunkelritter += 1
-                if rollencheck(rol["Wilder Bergstamm"],member):
-                    wilderBergstamm += 1
-                if rollencheck(rol["Mystischer Orden"],member):
-                    mystischerOrden += 1 
-                if rollencheck(rol["Nordmänner"],member):
-                    nordmanner += 1
-                if rollencheck(rol["Piraten"],member):
-                    piraten += 1
-                if rollencheck(rol["Ägypter"],member):
-                    agypter += 1
-                if rollencheck(rol["Ureinwohner"],member):
-                    ureinwohner += 1
-                if rollencheck(rol["Römer"],member):
-                    romer += 1
-                if rollencheck(rol["Samurai"],member):
-                    samurai += 1
-            await message.channel.send("Dunkelritter: "+str(dunkelritter)+" \nWilder Bergstamm: "+ str(wilderBergstamm)+ " \nNordmänner: "+str(nordmanner)+" \nMystischer Orden: "+str(mystischerOrden)+" \nPiraten: "+str(piraten)+" \nÄgypter: "+str(agypter)+" \nUreinwohner: "+str(ureinwohner)+" \nRömer: "+str(romer)+" \nSamurai: "+str(samurai))
+                for rolle in rollenanzahl.keys():
+                    rollenanzahl[rolle] += rollencheck(rol[rolle],member)
+
+            message = "\n".join([f"{rolle}: {rollenanzahl[rolle]}" for rolle in rollenanzahl])
+            await message.channel.send(message)
+            
         if message.content.startswith("!invasion"):
+            if re.fullmatch("!invasion [\w\s]+, (Samstag|Sonntag) \\d\\d:\\d\\d",message.content) is None:
+                print("error!") #Falscher input, error meldung im discord channel TODO
+                return #keinen weiteren code ausführen
+
             guild = message.guild
             author = message.author
             if (await authorcheck(self,author,guild)):
-                nachricht = message.content[9:]
-                nachricht = nachricht.lower()
-                nachricht = nachricht.replace(" ","")
-                #nachricht = nachricht.split(",")
+                splitmsg = message.content[10:].lower().split(",")
+                festung = splitmsg[0]
+                if festung not in festungen.keys():
+                    print("festung gibts nicht") #TODO error meldung im discord channel
+                    return #keinen weiteren code ausführen
+                splitmsg = splitmsg[1][1:].split(" ")
+                tag = splitmsg[0]
+                #uhrzeit = pyutil.timeparse(splitmsg[1]) #Whoopsie
+                splitmsg = splitmsg[1].split(":")
+                uhrzeit = datetime.time(int(splitmsg[0]),int(splitmsg[1]))
+                nachricht = message.content[9:].lower().strip()
                 fraktion = await fcheck(self,message.author,message.guild,message.author)
                 nachricht= nachricht +","+str(guild.get_role(fraktion).name)+"\n"
 
