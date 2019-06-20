@@ -1,5 +1,5 @@
 #Made by Berkant03 and MisterL2
-#Email: berkantpalazoglu03@gmail.com
+
 
 import discord
 from discord.utils import get
@@ -13,7 +13,7 @@ import pyutil
 import re
 import sqlite3
 
-TOKEN = 'Your Token'
+TOKEN = ''
 
 fraktionen = {"Dunkelritter":587938986262265859,"Wilder Bergstamm":587938913092370442,"Mystischer Orden":587939070353735730,"Nordmänner":587938861116817411,"Piraten":587939283701334016,"Ägypter":587939233902362634,"Ureinwohner":587939210644815882,"Römer":587939310414725140,"Samurai":587938954859249696}
 allFractions = ["Dunkelritter","Wilder Bergstamm","Mystischer Orden","Nordmänner","Piraten","Ägypter","Ureinwohner","Römer","Samurai"]
@@ -61,17 +61,18 @@ def log(person_name,person_id,command,channel_name,datum): #command zeigt die vo
     uhrzeit = datum[1][:5]
     cursor.execute("INSERT INTO logs VALUES (?,?,?,?,?,?)",[person_name,person_id,command,channel,tag,uhrzeit])
     conn.commit()
-    
+
+
 def leiter_wechsel(fraktion,leiter_id): #Wenn sich der Leiter einer Stadt ändert
     global cursor
     cursor.execute("UPDATE fraktionen SET leiter_id = ? WHERE fraktion = ?",[leiter_id,fraktion])
     conn.commit()
-    
+
 def festung_einnahme(festung,fraktion): #Wenn eine Basis eingenommen wird. "fraktion" ist der neue Besitzer der Stadt
     global cursor
     cursor.execute("UPDATE festungen SET fraktion = ? WHERE festung = ?",[fraktion,festung])
     conn.commit()
-    
+
 def invasion_ankündigung(festung,angreifer_fraktion,verteidiger_fraktion,datum): #datum als datetime.datetime object
     global cursor
     datum = datum.split()
@@ -79,16 +80,18 @@ def invasion_ankündigung(festung,angreifer_fraktion,verteidiger_fraktion,datum)
     uhrzeit = datum[1][:5]
     cursor.execute("INSERT INTO invasion VALUES (?,?,?,?,?)",[festung,angreifer_fraktion,verteidiger_fraktion,tag,uhrzeit])
     conn.commit()
-    
+
+
 def festungen():
     global cursor
-    cursor.execute("SELECT festung FROM festungen")
-    return cursor.fetchall()
+    cursor.execute("SELECT festung,fraktion FROM festungen",)
+    return "\n".join([x[0] + ": " +  x[1] for x in cursor.fetchall()])
 
 def fraktions_nachricht(fraktion): #Holt die Nachricht zu diesem fraktionsnamen raus
     global cursor
-    cursor.execute("SELECT nachricht FROM fraktionen WHERE fraktion = ?",fraktion)
+    cursor.execute("SELECT nachricht FROM fraktionen WHERE fraktion = ?",[fraktion])
     return cursor.fetchone()[0]
+    #print(cursor.fetchone()[0])
 
 async def kickcheck(fraktion):
     return 
@@ -98,7 +101,7 @@ async def giveRole(self,fraktion,payload):
         member = guild.get_member(payload.user_id)
         await member.add_roles(discord.utils.get(guild.roles,name = fraktion),reason = "Fraktionsbeitritt",atomic=True)
         await member.remove_roles(discord.utils.get(guild.roles,name = "noch keine Fraktion"),reason = "Fraktionsbeitritt",atomic=True)
-        await member.send(nachricht[fraktion])
+        await member.send(fraktions_nachricht(fraktion))
         channel = self.get_channel(channels["fraktionswechsel"])
         await channel.send(str(member)+" ist der Fraktion "+ str(fraktion) +" beigetreten")
 
@@ -134,10 +137,11 @@ def rollencheck(fraktion,member):
     for item in [z.id for z in member.roles]:
         if item == fraktion:
             return True
+    return False
             
 #[<Guild id=564077511848493067 name='BT' shard_id=None chunked=True member_count=3>, <Guild id=579677389664157696 name='ðﾝﾕ﾿ðﾝﾖﾍðﾝﾖﾊ ðﾝﾕﾰðﾝﾖﾒðﾝﾖﾕðﾝﾖﾎðﾝﾖﾗðﾝﾖﾊ' shard_id=None chunked=True member_count=97>]
 
-async def invasioncheck(self): #TODO: Den Check mit der Datenbank connecten und funktion umschreiben
+async def invasioncheck(self):
     guild = self.get_guild(579677389664157696)
     channel = guild.get_channel(588733944183128064)
     print(guild)
@@ -206,15 +210,17 @@ async def invasioncheck(self): #TODO: Den Check mit der Datenbank connecten und 
  
 
 
-async def invasion(datum,konig,festung):
-    pass
+#async def invasion(datum,konig,festung):
+#    pass
     
-def archivieren(text):
-    f = open("invasionen.txt","a")
-    f.write(text)
+#def archivieren(text):
+#    f = open("invasionen.txt","a")
+#    f.write(text)
+#    
+#    f.close()
     
-    f.close()
     
+
 
 
 class MyClient(discord.Client):
@@ -225,6 +231,7 @@ class MyClient(discord.Client):
     async def on_ready(self):
         print('Logged on as', self.user)
         #await invasioncheck(self)
+        #print(festungen())
 
     async def on_message(self, message):
         # don't respond to ourselves
@@ -276,14 +283,18 @@ class MyClient(discord.Client):
             
             for member in message.guild.members:
                 for rolle in rollenanzahl.keys():
-                    rollenanzahl[rolle] += rollencheck(rol[rolle],member)
-
-            message = "\n".join([f"{rolle}: {rollenanzahl[rolle]}" for rolle in rollenanzahl])
-            await message.channel.send(message)
+                    #print(rolle)
+                    if rollencheck(rol[rolle],member):
+                        rollenanzahl[rolle] += 1
+                    #rollenanzahl[rolle] += rollencheck(rol[rolle],member)
+                    
+                    
+            nachricht = "\n".join([f"{rolle}: {rollenanzahl[rolle]}" for rolle in rollenanzahl])
+            await message.channel.send(nachricht)
             
         if message.content.startswith("!invasion"):
             if re.fullmatch("!invasion [\w\s]+, (Samstag|Sonntag) \\d\\d:\\d\\d",message.content) is None:
-                print("error!") #Falscher input, error meldung im discord channel TODO
+                await message.channel.send("error!")
                 return #keinen weiteren code ausführen
 
             guild = message.guild
@@ -292,7 +303,7 @@ class MyClient(discord.Client):
                 splitmsg = message.content[10:].lower().split(",")
                 festung = splitmsg[0]
                 if festung not in festungen.keys():
-                    print("festung gibts nicht") #TODO error meldung im discord channel
+                    await message.channel.send("festung gibts nicht")
                     return #keinen weiteren code ausführen
                 splitmsg = splitmsg[1][1:].split(" ")
                 tag = splitmsg[0]
@@ -303,8 +314,23 @@ class MyClient(discord.Client):
                 fraktion = await fcheck(self,message.author,message.guild,message.author)
                 nachricht= nachricht +","+str(guild.get_role(fraktion).name)+"\n"
 
-                archivieren(nachricht)
+                #archivieren(nachricht)
+        
+        if message.content == "!festungen":
+            global cursor
+            await message.channel.send(festungen())
             
+        
+        if message.content in ["!help","!hilfe"]:
+            hilfe = """----------Commands für Nutzer----------
+!playercount
+!fraktionsverteilung
+!festungen
+----------Commands für Könige/Fraktionsleiter----------
+!invasion Festung, Samstag/Sonntag hh:mm
+!remove @<player>
+!request <text>"""
+            await message.channel.send(hilfe)
             
                     
         
