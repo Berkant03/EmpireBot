@@ -137,7 +137,7 @@ def rollencheck(fraktion,member):
             
 #[<Guild id=564077511848493067 name='BT' shard_id=None chunked=True member_count=3>, <Guild id=579677389664157696 name='ðﾝﾕ﾿ðﾝﾖﾍðﾝﾖﾊ ðﾝﾕﾰðﾝﾖﾒðﾝﾖﾕðﾝﾖﾎðﾝﾖﾗðﾝﾖﾊ' shard_id=None chunked=True member_count=97>]
 
-async def invasioncheck(self):
+async def invasioncheck(self): #TODO: Den Check mit der Datenbank connecten und funktion umschreiben
     guild = self.get_guild(579677389664157696)
     channel = guild.get_channel(588733944183128064)
     print(guild)
