@@ -93,4 +93,5 @@ festungen = [("1","Nordmänner"),
 
 cursor.executemany("INSERT INTO festungen VALUES (?,?)",festungen)
 
+conn.commit()
 conn.close()
