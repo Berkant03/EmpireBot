@@ -283,9 +283,6 @@ class MyClient(discord.Client):
             
             for member in message.guild.members:
                 for rolle in rollenanzahl.keys():
-                    #print(rolle)
-                    #if rollencheck(rol[rolle],member):
-                    #    rollenanzahl[rolle] += 1
                     rollenanzahl[rolle] += rollencheck(rol[rolle],member)
                     
                     
