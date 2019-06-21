@@ -51,8 +51,8 @@ rol = {"Dunkelritter":587376791170187274,"Samurai":587376876184666123,"Römer":5
 "Nordmänner":587376412625731614}
 
 
-festungen = {"dunkelBurg":"Dunkelritter","palast":"Samurai","rom":"Römer","kirche":"Mystischer Orden","wälder das pantheon":"Ureinwohner",
-"pyramide":"Ägypter","boot":"Piraten","bergfort":"Wilder Bergstamm","eiskappen":"Nordmänner"}
+#festungen = {"dunkelBurg":"Dunkelritter","palast":"Samurai","rom":"Römer","kirche":"Mystischer Orden","wälder das pantheon":"Ureinwohner",
+#"pyramide":"Ägypter","boot":"Piraten","bergfort":"Wilder Bergstamm","eiskappen":"Nordmänner"}
 
 def log(person_name,person_id,command,channel_name,datum): #command zeigt die volle message, datum als datetime.datetime object
     global cursor
@@ -283,10 +283,7 @@ class MyClient(discord.Client):
             
             for member in message.guild.members:
                 for rolle in rollenanzahl.keys():
-                    #print(rolle)
-                    if rollencheck(rol[rolle],member):
-                        rollenanzahl[rolle] += 1
-                    #rollenanzahl[rolle] += rollencheck(rol[rolle],member)
+                    rollenanzahl[rolle] += rollencheck(rol[rolle],member)
                     
                     
             nachricht = "\n".join([f"{rolle}: {rollenanzahl[rolle]}" for rolle in rollenanzahl])
@@ -313,8 +310,10 @@ class MyClient(discord.Client):
                 nachricht = message.content[9:].lower().strip()
                 fraktion = await fcheck(self,message.author,message.guild,message.author)
                 nachricht= nachricht +","+str(guild.get_role(fraktion).name)+"\n"
-
+                
                 #archivieren(nachricht)
+                
+                
         
         if message.content == "!festungen":
             global cursor
@@ -334,7 +333,25 @@ class MyClient(discord.Client):
             
                     
         
-        
+        if message.content.startswith("!add"):
+            global cursor
+            if message.author.id in [367732762419003403,235492603028570112]:
+                cursor.execute("SELECT leiter_rollen_id FROM fraktionen")
+                lrid = [x[0] for x in cursor.fetchall()]#Put Tuple values into List
+                
+                for rollen in lrid:
+                    
+                    if int(rollen) in [h.id for h in message.author.roles]:                   
+                        cursor.execute("SELECT rollen_id FROM fraktionen WHERE leiter_rollen_id = ?",[rollen])#Get rollen_id
+                        ID = cursor.fetchone()[0]#Get Tuple Value
+                        ID = int(ID)
+                       
+                
+                        user = message.mentions[0]
+                        if 587406516567539801 in [h.id for h in message.guild.get_member(user.id).roles]:
+                            await user.add_roles(message.guild.get_role(ID),reason = "Fraktionsbeitritt durch Dr.Eckig bzw. Berkant(Testzwecke)",atomic=True)
+                            await user.remove_roles(message.guild.get_role(587406516567539801),reason ="Fraktionsbeitritt durch Dr.Eckig bzw. Berkant(Testzwecke)",atomic=True)
+            
     async def on_raw_reaction_add(self,payload):
         if payload.channel_id == 587938281052700683:
                         
