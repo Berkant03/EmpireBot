@@ -336,22 +336,17 @@ class MyClient(discord.Client):
         
         if message.content.startswith("!add"):
             global cursor
-            if message.author.id in [367732762419003403,235492603028570112]:
-                cursor.execute("SELECT leiter_rollen_id FROM fraktionen")
-                lrid = [x[0] for x in cursor.fetchall()]#Put Tuple values into List
-                
-                for rollen in lrid:
-                    
-                    if int(rollen) in [h.id for h in message.author.roles]:                   
-                        cursor.execute("SELECT rollen_id FROM fraktionen WHERE leiter_rollen_id = ?",[rollen])#Get rollen_id
-                        ID = cursor.fetchone()[0]#Get Tuple Value
-                        ID = int(ID)
-                       
-                
-                        user = message.mentions[0]
-                        if 587406516567539801 in [h.id for h in message.guild.get_member(user.id).roles]:
-                            await user.add_roles(message.guild.get_role(ID),reason = "Fraktionsbeitritt durch Dr.Eckig bzw. Berkant(Testzwecke)",atomic=True)
-                            await user.remove_roles(message.guild.get_role(587406516567539801),reason ="Fraktionsbeitritt durch Dr.Eckig bzw. Berkant(Testzwecke)",atomic=True)
+            cursor.execute("SELECT leiter_rollen_id FROM fraktionen")
+            lrid = [x[0] for x in cursor.fetchall()]#Put Tuple values into List               
+            for rollen in lrid:
+                if int(rollen) in [h.id for h in message.author.roles]:                   
+                    cursor.execute("SELECT rollen_id FROM fraktionen WHERE leiter_rollen_id = ?",[rollen])#Get rollen_id
+                    ID = cursor.fetchone()[0]#Get Tuple Value
+                    ID = int(ID)
+                    user = message.mentions[0]
+                    if 587406516567539801 in [h.id for h in message.guild.get_member(user.id).roles]:
+                        await user.add_roles(message.guild.get_role(ID),reason = "Fraktionsbeitritt durch Dr.Eckig bzw. Berkant(Testzwecke)",atomic=True)
+                        await user.remove_roles(message.guild.get_role(587406516567539801),reason ="Fraktionsbeitritt durch Dr.Eckig bzw. Berkant(Testzwecke)",atomic=True)
             
     async def on_raw_reaction_add(self,payload):
         if payload.channel_id == 587938281052700683:
