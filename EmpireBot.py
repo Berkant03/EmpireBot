@@ -325,6 +325,7 @@ class MyClient(discord.Client):
 !playercount
 !fraktionsverteilung
 !festungen
+!fraktionslose
 ----------Commands für Könige/Fraktionsleiter----------
 !invasion Festung, Samstag/Sonntag hh:mm
 !remove @<player>
@@ -347,6 +348,14 @@ class MyClient(discord.Client):
                     if 587406516567539801 in [h.id for h in message.guild.get_member(user.id).roles]:
                         await user.add_roles(message.guild.get_role(ID),reason = "Fraktionsbeitritt durch Dr.Eckig bzw. Berkant(Testzwecke)",atomic=True)
                         await user.remove_roles(message.guild.get_role(587406516567539801),reason ="Fraktionsbeitritt durch Dr.Eckig bzw. Berkant(Testzwecke)",atomic=True)
+         
+        if message.content.lower() == "!fraktionslose":
+            fraktionslose = 0
+            for member in message.guild.members:
+                if 587406516567539801 in [o.id for o in member.roles]:
+                    fraktionslose += 1
+            await message.channel.send("Auf dem Server haben %s Personen noch keine Fraktion" % fraktionslose)
+         
             
     async def on_raw_reaction_add(self,payload):
         if payload.channel_id == 587938281052700683:
