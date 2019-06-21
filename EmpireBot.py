@@ -346,8 +346,9 @@ class MyClient(discord.Client):
                     ID = int(ID)
                     user = message.mentions[0]
                     if 587406516567539801 in [h.id for h in message.guild.get_member(user.id).roles]:
-                        await user.add_roles(message.guild.get_role(ID),reason = "Fraktionsbeitritt durch Dr.Eckig bzw. Berkant(Testzwecke)",atomic=True)
-                        await user.remove_roles(message.guild.get_role(587406516567539801),reason ="Fraktionsbeitritt durch Dr.Eckig bzw. Berkant(Testzwecke)",atomic=True)
+                        await user.add_roles(message.guild.get_role(ID),reason = "Fraktionsbeitritt durch Könige",atomic=True)
+                        await user.remove_roles(message.guild.get_role(587406516567539801),reason ="Fraktionsbeitritt durch Könige",atomic=True)
+                        await message.channel.send(str(user)+ " wurde der fraktion hinzugefügt!")
          
         if message.content.lower() == "!fraktionslose":
             fraktionslose = 0
@@ -356,6 +357,21 @@ class MyClient(discord.Client):
                     fraktionslose += 1
             await message.channel.send("Auf dem Server haben %s Personen noch keine Fraktion" % fraktionslose)
          
+        if message.content.lower().startswith("!purge"):
+            anzahl = message.content.split()
+            def check(m):
+                return m.content and m.channel
+            for r in [b.id for b in message.author.roles]:
+                if r in [579701404289990685,587711467793678350,587939760878780416]:
+                    msd = await message.channel.send("Bist du dir Sicher? Antworte mit ja oder nein!")
+                    msg = await self.wait_for('message',check=check)
+                    if msg.content.lower() == "ja":
+                        await message.delete()
+                        await msd.delete()
+                        await msg.delete()
+                        await msg.channel.purge(limit=int(anzahl[1]))
+                    elif msg.content.lower() == "nein":
+                        await msg.channel.send("Abgebrochen")
             
     async def on_raw_reaction_add(self,payload):
         if payload.channel_id == 587938281052700683:
