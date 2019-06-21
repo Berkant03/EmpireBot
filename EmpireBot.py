@@ -283,9 +283,6 @@ class MyClient(discord.Client):
             
             for member in message.guild.members:
                 for rolle in rollenanzahl.keys():
-                    #print(rolle)
-                    #if rollencheck(rol[rolle],member):
-                    #    rollenanzahl[rolle] += 1
                     rollenanzahl[rolle] += rollencheck(rol[rolle],member)
                     
                     
@@ -331,8 +328,7 @@ class MyClient(discord.Client):
 ----------Commands für Könige/Fraktionsleiter----------
 !invasion Festung, Samstag/Sonntag hh:mm
 !remove @<player>
-!request <text>
-!add @<player>"""
+!request <text>"""
             await message.channel.send(hilfe)
             
                     
