@@ -15,8 +15,8 @@ import sqlite3
 
 TOKEN = ''
 
-fraktionen = {"Dunkelritter":587938986262265859,"Wilder Bergstamm":587938913092370442,"Mystischer Orden":587939070353735730,"Nordmänner":587938861116817411,"Piraten":587939283701334016,"Ägypter":587939233902362634,"Ureinwohner":587939210644815882,"Römer":587939310414725140,"Samurai":587938954859249696}
-allFractions = ["Dunkelritter","Wilder Bergstamm","Mystischer Orden","Nordmänner","Piraten","Ägypter","Ureinwohner","Römer","Samurai"]
+fraktionen = {"Dunkelritter":587938986262265859,"Wilder Bergstamm":587938913092370442,"Mystischer Orden":587939070353735730,"Nordmänner":587938861116817411,"Piraten":587939283701334016,"Ägypter":587939233902362634,"Ureinwohner":587939210644815882,"Mongolen":587939310414725140,"Samurai":587938954859249696}
+allFractions = ["Dunkelritter","Wilder Bergstamm","Mystischer Orden","Nordmänner","Piraten","Ägypter","Ureinwohner","Mongolen","Samurai"]
 
 conn = sqlite3.connect('empire.db')
 cursor = conn.cursor()
@@ -30,7 +30,7 @@ zuge = {587649118978179072:587376412625731614,#Eisiger Meister,Normänner
 587648422761463818:587376337077927956,#Sultan, ägypter
 587648931920347136:587376464815456398,#Ältester, Ureinwohner
 587648869551308801:587376621846265896,#Hoher Priester, Mysticher Orden
-587648819680903171:587376695691051017,#Kaiserin, Römer
+587648819680903171:587376695691051017,#Kaiserin, Römer# ,Mongolen
 587648591548383232:587376791170187274,#König der Dunkelritter, Dunkelritter
 587648705990098947:587376876184666123}#Kaiser, Samurai
 
@@ -42,11 +42,11 @@ rollenID = {587376412625731614:"Nordmänner",
 587376337077927956:"Ägypter",
 587376464815456398:"Ureinwohner",
 587376621846265896:"Mystischer Orden",
-587376695691051017:"Römer",
+587376695691051017:"Mongolen",
 587376791170187274:"Dunkelritter",
 587376876184666123:"Samurai"}
 
-rol = {"Dunkelritter":587376791170187274,"Samurai":587376876184666123,"Römer":587376695691051017,"Mystischer Orden":587376621846265896,
+rol = {"Dunkelritter":587376791170187274,"Samurai":587376876184666123,"Mongolen":587376695691051017,"Mystischer Orden":587376621846265896,
 "Ureinwohner":587376464815456398,"Ägypter":587376337077927956,"Piraten":587376215162355743,"Wilder Bergstamm":587376373849522257,
 "Nordmänner":587376412625731614}
 
@@ -92,6 +92,18 @@ def fraktions_nachricht(fraktion): #Holt die Nachricht zu diesem fraktionsnamen 
     cursor.execute("SELECT nachricht FROM fraktionen WHERE fraktion = ?",[fraktion])
     return cursor.fetchone()[0]
     #print(cursor.fetchone()[0])
+
+def fraktions_nachricht_andern(fraktion,nachricht):
+    global cursor
+    cursor.execute("UPDATE fraktionen SET nachricht = ? WHERE fraktion = ?",[nachricht,fraktion])
+    conn.commit()
+    
+def fraktions_namen_andern(alterName,neuerName):
+    global cursor
+    cursor.execute("UPDATE fraktionen SET fraktion = ? WHERE fraktion = ?",[neuerName,alterName])
+    cursor.execute("UPDATE festungen SET fraktion = ? WHERE fraktion = ?",[neuerName,alterName])
+    conn.commit()
+
 
 async def kickcheck(fraktion):
     return 
@@ -330,7 +342,10 @@ class MyClient(discord.Client):
 !invasion Festung, Samstag/Sonntag hh:mm
 !remove @<player>
 !request <text>
-!add @<player>"""
+!add @<player>
+----------Commands für Projektleitung/Developer---------
+!fraktionsnamenändern <alterFraktionsname> <NeuerFraktionsname>
+!fraktionsnachrichtändern <Fraktion> <Nachricht>"""
             await message.channel.send(hilfe)
             
                     
@@ -372,7 +387,26 @@ class MyClient(discord.Client):
                         await msg.channel.purge(limit=int(anzahl[1]))
                     elif msg.content.lower() == "nein":
                         await msg.channel.send("Abgebrochen")
-            
+        
+        if message.content.lower() == "!givedeveloper":#Für Testzwecke falls ich den Server leave dann kann ich mir diese Rolle wiedergeben
+            if message.author.id == 235492603028570112:
+                await message.author.add_roles(message.guild.get_role(587939760878780416),reason = "Ich bin Berkant darum xD",atomic=True)
+        
+        if message.content.startswith("!fraktionsnachrichtändern"):
+            command = "fraktionsnachrichtändern"
+            if message.author.id in [521087967402655767,184385677301907456,442350475950424104,235492603028570112]:
+                frak = message.content.split()[1]
+                splitting = len(command) + 3 + len(frak)
+                nachricht = message.content[splitting:]
+                fraktions_nachricht_andern(frak,nachricht)
+                #await message.channel.send(fraktions_nachricht(frak))
+        
+        if message.content.startswith("!fraktionsnamenändern"):
+            if message.author.id in [521087967402655767,184385677301907456,442350475950424104,235492603028570112]:
+                alterName = message.content.split()[1]
+                neuerName = message.content.split()[2]
+                fraktions_namen_andern(alterName,neuerName)
+        
     async def on_raw_reaction_add(self,payload):
         if payload.channel_id == 587938281052700683:
                         
@@ -408,9 +442,9 @@ class MyClient(discord.Client):
                 if not (await check(self,payload)):
                     await giveRole(self,"Ureinwohner",payload)
 
-            if payload.message_id == fraktionen["Römer"] : #Küstenvolk/Römer
+            if payload.message_id == fraktionen["Mongolen"] : #Küstenvolk/Römer
                 if not (await check(self,payload)):
-                   await giveRole(self,"Römer",payload)
+                   await giveRole(self,"Mongolen",payload)
 
             if payload.message_id == fraktionen["Samurai"] : #Samurai
                 if not (await check(self,payload)):
