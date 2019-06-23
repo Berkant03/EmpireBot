@@ -269,6 +269,7 @@ class MyClient(discord.Client):
                     channel = self.get_channel(channels["fraktionswechsel"])
                     await channel.send(str(person) + " wurde aus der fraktion " +str(rollenID[spieler])+ " geworfen")
                     await person.add_roles(discord.utils.get(message.guild.roles,name = "noch keine Fraktion"),reason = "Aus der Fraktion geworfen",atomic=True)
+                    log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
             
         if message.content.startswith("!request"):
             guild = message.guild
@@ -284,6 +285,7 @@ class MyClient(discord.Client):
         if message.content.startswith("!pin"):
             if (await authorcheck(self,message.author,message.guild)):
                 await message.pin()
+                log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
         
         if message.content.startswith("!warte"):
             await asyncio.sleep(10)
@@ -323,7 +325,8 @@ class MyClient(discord.Client):
                 fraktion = await fcheck(self,message.author,message.guild,message.author)
                 nachricht= nachricht +","+str(guild.get_role(fraktion).name)+"\n"
                 
-                #archivieren(nachricht)
+                log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
+                #archivieren(nachricht)# Muss noch gemacht werden TODO
                 
                 
         
@@ -344,8 +347,8 @@ class MyClient(discord.Client):
 !request <text>
 !add @<player>
 ----------Commands für Projektleitung/Developer---------
-!fraktionsnamenändern ,<alterFraktionsname> ,<NeuerFraktionsname>
-!fraktionsnachrichtändern , <Fraktion> ,<Nachricht>"""
+!fraktionsnamenändern , <alterFraktionsname> , <NeuerFraktionsname>
+!fraktionsnachrichtändern , <Fraktion> , <Nachricht>"""
             await message.channel.send(hilfe)
             
                     
@@ -364,6 +367,7 @@ class MyClient(discord.Client):
                         await user.add_roles(message.guild.get_role(ID),reason = "Fraktionsbeitritt durch Könige",atomic=True)
                         await user.remove_roles(message.guild.get_role(587406516567539801),reason ="Fraktionsbeitritt durch Könige",atomic=True)
                         await message.channel.send(str(user)+ " wurde der fraktion hinzugefügt!")
+                        log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
          
         if message.content.lower() == "!fraktionslose":
             fraktionslose = 0
@@ -381,6 +385,7 @@ class MyClient(discord.Client):
                     msd = await message.channel.send("Bist du dir Sicher? Antworte mit ja oder nein!")
                     msg = await self.wait_for('message',check=check)
                     if msg.content.lower() == "ja":
+                        log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
                         await message.delete()
                         await msd.delete()
                         await msg.delete()
@@ -391,6 +396,7 @@ class MyClient(discord.Client):
         if message.content.lower() == "!givedeveloper":#Für Testzwecke falls ich den Server leave dann kann ich mir diese Rolle wiedergeben
             if message.author.id == 235492603028570112:
                 await message.author.add_roles(message.guild.get_role(587939760878780416),reason = "Ich bin Berkant darum xD",atomic=True)
+                log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
         
         if message.content.startswith("!fraktionsnachrichtändern"):
             command = "fraktionsnachrichtändern"
@@ -401,8 +407,9 @@ class MyClient(discord.Client):
                     frak = frak[0] + " " + frak[1]
                 elif len(frak) == 1:
                     frak = frak[0]
-                txt = msg.split(",")[2]
+                txt = msg.split(", ")[2]
                 fraktions_nachricht_andern(frak,txt)
+                log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
                 
         
         if message.content.startswith("!fraktionsnamenändern"):
@@ -422,6 +429,7 @@ class MyClient(discord.Client):
                     neuerName = neuerName[0]
                 
                 fraktions_namen_andern(alterName,neuerName)
+                log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
         
     async def on_raw_reaction_add(self,payload):
         if payload.channel_id == 587938281052700683:
