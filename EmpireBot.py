@@ -341,6 +341,7 @@ class MyClient(discord.Client):
 !fraktionsverteilung
 !festungen
 !fraktionslose
+!leave
 ----------Commands für Könige/Fraktionsleiter----------
 !invasion Festung, Samstag/Sonntag hh:mm
 !remove @<player>
@@ -430,6 +431,15 @@ class MyClient(discord.Client):
                 
                 fraktions_namen_andern(alterName,neuerName)
                 log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
+        
+        if message.content.lower() == "!leave":
+            for item in [k.id for k in message.author.roles]:
+                if item in rollenID.keys():
+                    await message.author.remove_roles(message.guild.get_role(item),reason = "!leave", atomic = True)
+                    await message.author.add_roles(message.guild.get_role(587406516567539801),reason = "!leave",atomic = True)
+                    channel = self.get_channel(channels["fraktionswechsel"])
+                    await channel.send(str(message.author) + " ist aus seiner Fraktion ausgetreten")
+                    log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
         
     async def on_raw_reaction_add(self,payload):
         if payload.channel_id == 587938281052700683:
