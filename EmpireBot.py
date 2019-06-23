@@ -56,10 +56,10 @@ rol = {"Dunkelritter":587376791170187274,"Samurai":587376876184666123,"Mongolen"
 
 def log(person_name,person_id,command,channel_name,datum): #command zeigt die volle message, datum als datetime.datetime object
     global cursor
-    datum = datum.split()
+    datum = str(datum).split()
     tag = datum[0]
     uhrzeit = datum[1][:5]
-    cursor.execute("INSERT INTO logs VALUES (?,?,?,?,?,?)",[person_name,person_id,command,channel,tag,uhrzeit])
+    cursor.execute("INSERT INTO logs VALUES (?,?,?,?,?,?)",[str(person_name),str(person_id),command,str(channel_name),tag,uhrzeit])
     conn.commit()
 
 
