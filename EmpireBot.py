@@ -344,8 +344,8 @@ class MyClient(discord.Client):
 !request <text>
 !add @<player>
 ----------Commands für Projektleitung/Developer---------
-!fraktionsnamenändern <alterFraktionsname> <NeuerFraktionsname>
-!fraktionsnachrichtändern <Fraktion> <Nachricht>"""
+!fraktionsnamenändern ,<alterFraktionsname> ,<NeuerFraktionsname>
+!fraktionsnachrichtändern , <Fraktion> ,<Nachricht>"""
             await message.channel.send(hilfe)
             
                     
@@ -395,21 +395,36 @@ class MyClient(discord.Client):
         if message.content.startswith("!fraktionsnachrichtändern"):
             command = "fraktionsnachrichtändern"
             if message.author.id in [521087967402655767,184385677301907456,442350475950424104,235492603028570112]:
-                frak = message.content.split()[1]
-                splitting = len(command) + 3 + len(frak)
-                nachricht = message.content[splitting:]
-                fraktions_nachricht_andern(frak,nachricht)
-                #await message.channel.send(fraktions_nachricht(frak))
+                msg = message.content
+                frak = msg.split(",")[1].split()
+                if len(frak) == 2:
+                    frak = frak[0] + " " + frak[1]
+                elif len(frak) == 1:
+                    frak = frak[0]
+                txt = msg.split(",")[2]
+                fraktions_nachricht_andern(frak,txt)
+                
         
         if message.content.startswith("!fraktionsnamenändern"):
             if message.author.id in [521087967402655767,184385677301907456,442350475950424104,235492603028570112]:
-                alterName = message.content.split()[1]
-                neuerName = message.content.split()[2]
+                msg = message.content
+                
+                alterName = msg.split(",")[1].split()
+                if len(alterName) == 2:
+                    alterName = alterName[0] + " " + alterName[1]
+                elif len(alterName) == 1:
+                    alterName = alterName[0]
+                
+                neuerName = msg.split(",")[2].split()
+                if len(neuerName) == 2:
+                    neuerName = neuerName[0] + " " + neuerName[1]
+                elif len(neuerName) == 1:
+                    neuerName = neuerName[0]
+                
                 fraktions_namen_andern(alterName,neuerName)
         
     async def on_raw_reaction_add(self,payload):
         if payload.channel_id == 587938281052700683:
-                        
             if payload.message_id == fraktionen["Dunkelritter"]: #Dunkelritter
                 if not (await check(self,payload)):
                     await giveRole(self,"Dunkelritter",payload)
