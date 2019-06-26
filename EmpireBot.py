@@ -153,75 +153,6 @@ def rollencheck(fraktion,member):
             
 #[<Guild id=564077511848493067 name='BT' shard_id=None chunked=True member_count=3>, <Guild id=579677389664157696 name='ðﾝﾕ﾿ðﾝﾖﾍðﾝﾖﾊ ðﾝﾕﾰðﾝﾖﾒðﾝﾖﾕðﾝﾖﾎðﾝﾖﾗðﾝﾖﾊ' shard_id=None chunked=True member_count=97>]
 
-async def invasioncheck(self):
-    guild = self.get_guild(579677389664157696)
-    channel = guild.get_channel(588733944183128064)
-    print(guild)
-    print(channel)
-    while True:
-        
-        f = open("invasionen.txt","r")
-        rawdata = f.readlines()
-        print(rawdata)
-        invaNR = 0
-        checkNR = 0
-        for item in rawdata:
-            print(item)
-            invaNR += 1
-        print(invaNR)
-        f.close()
-        while checkNR < invaNR:
-            f = open("invasionen.txt","r")
-            print("why")
-            print(checkNR)
-            satz = rawdata[checkNR]
-            
-            liste = satz.split(",")
-            print(liste)
-            print("Wtf")
-            inva = liste
-            print(inva)
-            jahr = datetime.datetime.now().year
-            tag = datetime.datetime.now().day
-            monat = datetime.datetime.now().month
-            stunde = datetime.datetime.now().hour
-            minuten = datetime.datetime.now().minute
-            
-            invtag = int(inva[1])
-            invmonat = int(inva[2])
-            invjahr = int(inva[3])
-            
-            fest = inva[0]
-            frak = inva[5]
-            invstunde = int(inva[4])
-            
-            if not f.closed:
-                f.close()
-            
-            if jahr == invjahr:
-                if monat == invmonat:
-                    if (invtag - tag) == 0:
-                        if invstunde > stunde:
-                            if invstunde-stunde == 0:
-                                remainingTime = 60-minuten
-                            else:
-                                remainingTime = (((invstunde - stunde)*60)+(60-minuten))
-                            #print(remainingTime)
-                                remainingStunde = math.floor(remainingTime/60)
-                            #print(remainingStunde)
-                                remainingMinuten = remainingTime%60
-                            #print(remainingStunde)
-                            if remainingTime >= 0:
-                                await channel.send("Die Fraktion " + str(festungen[fest]) + " wird in " + str(remainingStunde) + "Stunden und " +str(remainingMinuten) + "Minuten von den "+str(frak)+" angegriffen")
-            checkNR += 1
-        
-        
-        await asyncio.sleep(30)#3600
-        
-
- 
-
-
 #async def invasion(datum,konig,festung):
 #    pass
     
@@ -313,7 +244,7 @@ class MyClient(discord.Client):
             if (await authorcheck(self,author,guild)):
                 splitmsg = message.content[10:].lower().split(",")
                 festung = splitmsg[0]
-                if festung not in festungen.keys():
+                if festung not in festungen.keys():#festungen.keys() doesnt function. Needs to be fixed. festunge was the dictionary at the top but now we use DB
                     await message.channel.send("festung gibts nicht")
                     return #keinen weiteren code ausführen
                 splitmsg = splitmsg[1][1:].split(" ")
@@ -400,7 +331,6 @@ class MyClient(discord.Client):
                 log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
         
         if message.content.startswith("!fraktionsnachrichtändern"):
-            command = "fraktionsnachrichtändern"
             if message.author.id in [521087967402655767,184385677301907456,442350475950424104,235492603028570112]:
                 msg = message.content
                 frak = msg.split(",")[1].split()
