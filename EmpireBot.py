@@ -244,7 +244,7 @@ class MyClient(discord.Client):
             if (await authorcheck(self,author,guild)):
                 splitmsg = message.content[10:].lower().split(",")
                 festung = splitmsg[0]
-                if festung not in festungen.keys():#festungen.keys() doesnt function. Needs to be fixed. festunge was the dictionary at the top but now we use DB
+                if festung not in festungen.keys():#festungen.keys() doesnt function. Needs to be fixed. festungen was the dictionary at the top but now we use DB
                     await message.channel.send("festung gibts nicht")
                     return #keinen weiteren code ausführen
                 splitmsg = splitmsg[1][1:].split(" ")
