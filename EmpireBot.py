@@ -12,6 +12,7 @@ import math
 import pyutil
 import re
 import sqlite3
+from calendar import monthrange
 
 TOKEN = ''
 
@@ -50,6 +51,10 @@ rol = {"Dunkelritter":587376791170187274,"Samurai":587376876184666123,"Mongolen"
 "Ureinwohner":587376464815456398,"Ägypter":587376337077927956,"Piraten":587376215162355743,"Wilder Bergstamm":587376373849522257,
 "Nordmänner":587376412625731614}
 
+tagForID = {0:"monday",1:"tuesday",2:"wednesday",3:"thursday",4:"friday",5:"saturday",6:"sunday"}
+datetimetage = {"monday":0,"tuesday":1,"wednesday":2,"thursday":3,"friday":4,"saturday":5,"sunday":6}
+tageInEnglisch = {"samstag":"saturday","sonntag":"sunday"}
+tageInDeutsch = {"monday":"montag","tuesday":"dienstag","wednesday":"mittwoch","thursday":"donnerstag","friday":"freitag","saturday":"samstag","sunday":"sonntag"}
 
 #festungen = {"dunkelBurg":"Dunkelritter","palast":"Samurai","rom":"Römer","kirche":"Mystischer Orden","wälder das pantheon":"Ureinwohner",
 #"pyramide":"Ägypter","boot":"Piraten","bergfort":"Wilder Bergstamm","eiskappen":"Nordmänner"}
@@ -75,7 +80,7 @@ def festung_einnahme(festung,fraktion): #Wenn eine Basis eingenommen wird. "frak
 
 def invasion_ankündigung(festung,angreifer_fraktion,verteidiger_fraktion,datum): #datum als datetime.datetime object
     global cursor
-    datum = datum.split()
+    datum = str(datum).split()
     tag = datum[0]
     uhrzeit = datum[1][:5]
     cursor.execute("INSERT INTO invasion VALUES (?,?,?,?,?)",[festung,angreifer_fraktion,verteidiger_fraktion,tag,uhrzeit])
@@ -85,7 +90,17 @@ def invasion_ankündigung(festung,angreifer_fraktion,verteidiger_fraktion,datum)
 def festungen():
     global cursor
     cursor.execute("SELECT festung,fraktion FROM festungen",)
-    return "\n".join([x[0] + ": " +  x[1] for x in cursor.fetchall()])
+    return ",\n".join([x[0] + ":" +  x[1] for x in cursor.fetchall()])
+
+def festungenZwei():
+    global cursor
+    cursor.execute("SELECT festung,fraktion FROM festungen",)
+    return ",".join([x[0] + ":" +  x[1] for x in cursor.fetchall()])
+
+def festungsNamen():
+    global cursor
+    cursor.execute("SELECT festung from festungen")
+    return [x[0].lower() for x in cursor.fetchall()]
 
 def fraktions_nachricht(fraktion): #Holt die Nachricht zu diesem fraktionsnamen raus
     global cursor
@@ -104,9 +119,42 @@ def fraktions_namen_andern(alterName,neuerName):
     cursor.execute("UPDATE festungen SET fraktion = ? WHERE fraktion = ?",[neuerName,alterName])
     conn.commit()
 
+def fraktionVonID(rolle_id):
+    global cursor
+    cursor.execute("SELECT fraktion FROM fraktionen WHERE rollen_id = ?",[rolle_id])
+    return cursor.fetchone()[0]
 
-async def kickcheck(fraktion):
-    return 
+def angreifer_fraktion_check(ang_frak):
+    global cursor
+    cursor.execute("SELECT angreifer_fraktion FROM invasion")
+    if ang_frak in [x[0] for x in cursor.fetchall()]:
+        return True
+    else:
+        return False
+
+def angreifer_fraktion_check_datum(ang_frak,datum):
+    global cursor
+    cursor.execute("SELECT datum FROM invasion WHERE angreifer_fraktion = ?",[ang_frak])
+    if str(datum) == str(cursor.fetchone()[0]):
+        return True
+    else:
+        return False
+
+def verteidiger_fraktion_check(ver_frak):
+    global cursor
+    cursor.execute("SELECT verteidiger_fraktion FROM invasion")
+    if ver_frak in [x[0] for x in cursor.fetchall()]:
+        return True
+    else:
+        return False
+
+def verteidiger_fraktion_check_datum(ver_frak,datum):
+    global cursor
+    cursor.execute("SELECT datum FROM invasion WHERE verteidiger_fraktion = ?",[ver_frak])
+    if str(datum) == str(cursor.fetchone()[0]):
+        return True
+    else:
+        return False
 
 async def giveRole(self,fraktion,payload):
         guild = self.get_guild(payload.guild_id)
@@ -153,18 +201,6 @@ def rollencheck(fraktion,member):
             
 #[<Guild id=564077511848493067 name='BT' shard_id=None chunked=True member_count=3>, <Guild id=579677389664157696 name='ðﾝﾕ﾿ðﾝﾖﾍðﾝﾖﾊ ðﾝﾕﾰðﾝﾖﾒðﾝﾖﾕðﾝﾖﾎðﾝﾖﾗðﾝﾖﾊ' shard_id=None chunked=True member_count=97>]
 
-#async def invasion(datum,konig,festung):
-#    pass
-    
-#def archivieren(text):
-#    f = open("invasionen.txt","a")
-#    f.write(text)
-#    
-#    f.close()
-    
-    
-
-
 
 class MyClient(discord.Client):
     async def on_member_join(self,member):
@@ -175,6 +211,7 @@ class MyClient(discord.Client):
         print('Logged on as', self.user)
         #await invasioncheck(self)
         #print(festungen())
+        #print(festungsNamen())
 
     async def on_message(self, message):
         # don't respond to ourselves
@@ -243,19 +280,104 @@ class MyClient(discord.Client):
             author = message.author
             if (await authorcheck(self,author,guild)):
                 splitmsg = message.content[10:].lower().split(",")
+                #print(splitmsg)
                 festung = splitmsg[0]
-                if festung not in festungen.keys():#festungen.keys() doesnt function. Needs to be fixed. festungen was the dictionary at the top but now we use DB
+                #print(festung)
+                if festung not in festungsNamen():
                     await message.channel.send("festung gibts nicht")
                     return #keinen weiteren code ausführen
                 splitmsg = splitmsg[1][1:].split(" ")
+                #print(splitmsg)
                 tag = splitmsg[0]
-                #uhrzeit = pyutil.timeparse(splitmsg[1]) #Whoopsie
+                #print(tag)
                 splitmsg = splitmsg[1].split(":")
+                #print(splitmsg)
                 uhrzeit = datetime.time(int(splitmsg[0]),int(splitmsg[1]))
+                #print(uhrzeit)
+                stunde =splitmsg[0]
+                minute = splitmsg[1]
                 nachricht = message.content[9:].lower().strip()
+                #print(nachricht)
                 fraktion = await fcheck(self,message.author,message.guild,message.author)
+                frakName = fraktionVonID(str(fraktion))
+                #print(frakName)
                 nachricht= nachricht +","+str(guild.get_role(fraktion).name)+"\n"
+                #print(nachricht)
+
+                #date
+                heuteZeit = datetime.datetime.now()
+                heute = datetime.datetime.now().date()
+                InvtagID = datetimetage[tageInEnglisch[tag]]
+                InvMonat = heute.month
+                heuteTag = heute.weekday()
+                # tagForID[heuteTag]    #tag in englisch
+                #print(heute)
+                #print(InvtagID)
+                #print(tagForID[heuteTag])
+
+                tagDifferenz = InvtagID - heuteTag
                 
+
+                if monthrange(heute.year,heute.month)[1] < (heute.day + tagDifferenz):
+                    u = (heute.day + tagDifferenz) - monthrange(heute.year,heute.month)[1] 
+                    InvMonat += 1
+                    InvTag = u
+                    InvJahr = heute.year
+                elif monthrange(heute.year,heute.month)[1] > (heute.day + tagDifferenz):
+                    u = heute.day + tagDifferenz 
+                    InvMonat = heute.month
+                    InvTag = u
+                    InvJahr = heute.year
+                
+                InvDatum = str(datetime.datetime(InvJahr,InvMonat,InvTag)).split()[0]
+                InvStunde = stunde
+                
+                if tagDifferenz == 0:
+                    nowSek = heuteZeit.hour*3600+heuteZeit*60
+                    invSek = InvStunde*3600+ minute*60
+                    if (invSek - nowSek < 72000):
+                        await message.channel.send("Eine Invasion muss 20 Stunden vor Beginn angekündigt werden")
+                        return
+
+                #print(InvDatum)
+                #print(InvStunde)
+                #print(minute)
+
+
+                if int(InvStunde) < 16 or int(InvStunde) > 22:
+                    await message.channel.send("Der Server ist um %s Uhr nicht offen. Bitte wähle eine andere Uhrzeit" % InvStunde)
+                    return
+                
+                #print(festungenZwei().split(","))
+                #invasion_ankündigung(festung,frakName,)
+                festungenFraktionen = {}
+                fraktionenFestungen = {}
+                for item in festungenZwei().split(","):
+                    item = item.split(":")
+                    festungenFraktionen.update( {item[0].lower():item[1]} )
+                    fraktionenFestungen.update( {item[1]:item[0]})
+                #print(festungenFraktionen)
+                verteidigendeFraktion = festungenFraktionen[festung]
+                #print(verteidigendeFraktion)
+                festung = fraktionenFestungen[verteidigendeFraktion]
+                #print(festung)
+                if angreifer_fraktion_check(frakName) and angreifer_fraktion_check_datum(frakName,InvDatum):
+                    await message.channel.send("Deine Fraktion greift schon jemanden an")
+                    return
+                if verteidiger_fraktion_check(frakName) and verteidiger_fraktion_check_datum(frakName,InvDatum):
+                    await message.channel.send("Deine Fraktion wird angegriffen, weshalb du keine Invasion Starten kannst")
+                    return
+                if angreifer_fraktion_check(verteidigendeFraktion) and angreifer_fraktion_check_datum(verteidigendeFraktion,InvDatum):
+                    await message.channel.send("Die Fraktion die du angreifen möchtest, greift schon jemand anderes an")
+                    return
+                if verteidiger_fraktion_check(verteidigendeFraktion) and verteidiger_fraktion_check_datum(verteidigendeFraktion,InvDatum):
+                    await message.channel.send("Die Fraktion die du angreifen möchtest, verteidigt schon jemanden anderes")
+                    return
+
+                InvDatum = datetime.datetime(InvJahr,InvMonat,InvTag,int(stunde),int(minute))
+                #print(InvDatum)
+                invasion_ankündigung(festung,frakName,verteidigendeFraktion,InvDatum)
+
                 log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
                 #archivieren(nachricht)# Muss noch gemacht werden TODO
                 
