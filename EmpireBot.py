@@ -67,6 +67,10 @@ def log(person_name,person_id,command,channel_name,datum): #command zeigt die vo
     cursor.execute("INSERT INTO logs VALUES (?,?,?,?,?,?)",[str(person_name),str(person_id),command,str(channel_name),tag,uhrzeit])
     conn.commit()
 
+def festungsnamen_andern(fraktion,festung):
+    global cursor
+    cursor.execute("UPDATE festungen SET festung = ? WHERE fraktion = ?",[festung,fraktion])
+    conn.commit()
 
 def leiter_wechsel(fraktion,leiter_id): #Wenn sich der Leiter einer Stadt ändert
     global cursor
@@ -86,11 +90,46 @@ def invasion_ankündigung(festung,angreifer_fraktion,verteidiger_fraktion,datum)
     cursor.execute("INSERT INTO invasion VALUES (?,?,?,?,?)",[festung,angreifer_fraktion,verteidiger_fraktion,tag,uhrzeit])
     conn.commit()
 
+def set_contest(fraktion,mode):
+    global cursor
+    cursor.execute("UPDATE contests SET contested = ? WHERE fraktion = ?",[mode,fraktion])
+    conn.commit()
+
+def set_urlaub(fraktion,mode):
+    global cursor
+    cursor.execute("UPDATE urlaub SET urlaub = ? WHERE fraktion = ?",[mode,fraktion])
+    cursor.execute("UPDATE urlaub SET genutzt = ? WHERE fraktion = ?",["True",fraktion])
+    conn.commit()
+
+def set_urlaub_mit_datum(fraktion,mode,datum):
+    global cursor
+    cursor.execute("UPDATE urlaub SET urlaub = ? WHERE fraktion = ?",[mode,fraktion])
+    cursor.execute("UPDATE urlaub SET genutzt = ? WHERE fraktion = ?",["True",fraktion])
+    conn.commit()
+
+def check_urlaub(fraktion):
+    global cursor
+    cursor.execute("SELECT urlaub FROM urlaub WHERE fraktion = ?",[fraktion])
+    fff = cursor.fetchone()[0]
+    if fff == "False":
+        return False
+    if fff == "True":
+        return True
+
+def urlauber():
+    global cursor
+    cursor.execute("SELECT fraktion,urlaub FROM urlaub")
+    return ",\n".join([x[0] + " : " +  x[1] for x in cursor.fetchall()])
+
+def contesteter():
+    global cursor
+    cursor.execute("SELECT fraktion, contested FROM contests")
+    return ",\n".join([x[0] + " : " +  x[1] for x in cursor.fetchall()])
 
 def festungen():
     global cursor
     cursor.execute("SELECT festung,fraktion FROM festungen",)
-    return ",\n".join([x[0] + ":" +  x[1] for x in cursor.fetchall()])
+    return ",\n".join([x[0] + " : " +  x[1] for x in cursor.fetchall()])
 
 def festungenZwei():
     global cursor
@@ -101,6 +140,11 @@ def festungsNamen():
     global cursor
     cursor.execute("SELECT festung from festungen")
     return [x[0].lower() for x in cursor.fetchall()]
+
+def invasions():
+    global cursor
+    cursor.execute("SELECT festung,angreifer_fraktion,verteidiger_fraktion,datum,uhrzeit FROM invasion")
+    return ",\n".join(["Festung: "+x[0] + ", Angreifer: " +  x[1] + ",Verteidiger: " + x[2] + ", Datum: " + x[3] +", Uhrzeit: " +x[4] for x in cursor.fetchall()])
 
 def fraktions_nachricht(fraktion): #Holt die Nachricht zu diesem fraktionsnamen raus
     global cursor
@@ -127,34 +171,68 @@ def fraktionVonID(rolle_id):
 def angreifer_fraktion_check(ang_frak):
     global cursor
     cursor.execute("SELECT angreifer_fraktion FROM invasion")
-    if ang_frak in [x[0] for x in cursor.fetchall()]:
+    ff = cursor.fetchall()
+    #print([x[0] for x in cursor.fetchall()])
+    #print(ang_frak)
+    if ang_frak in [x[0] for x in ff]:
+        print(True)
         return True
     else:
+        print(False)
         return False
 
-def angreifer_fraktion_check_datum(ang_frak,datum):
+
+def invasions_check_alles(ang_frak,date,invDatum,ver_frak):
     global cursor
-    cursor.execute("SELECT datum FROM invasion WHERE angreifer_fraktion = ?",[ang_frak])
-    if str(datum) == str(cursor.fetchone()[0]):
-        return True
-    else:
+    invDatum = str(invDatum).split()[0]
+    print(invDatum)
+    cursor.execute("SELECT angreifer_fraktion,verteidiger_fraktion FROM invasion WHERE datum = ?",[invDatum])    
+    ang_ver_frak_list = cursor.fetchall()
+    check_list = []
+    for item in [x[0] for x in ang_ver_frak_list]:
+        check_list.append(item)
+    for item in [x[1] for x in ang_ver_frak_list]:
+        check_list.append(item)
+    
+    if ang_frak in check_list:
+        return False
+    if ver_frak in check_list:
         return False
 
-def verteidiger_fraktion_check(ver_frak):
-    global cursor
-    cursor.execute("SELECT verteidiger_fraktion FROM invasion")
-    if ver_frak in [x[0] for x in cursor.fetchall()]:
-        return True
-    else:
+    """cursor.execute("SELECT angreifer_fraktion,verteidiger_fraktion FROM invasion WHERE datum > ?",[invDatum])
+    ang_ver_list_spater = cursor.fetchall()
+    check_list_zwei = []
+    for item in [x[0] for x in ang_ver_list_spater]:
+        check_list_zwei.append(item)
+    for item in [x[1] for x in ang_ver_list_spater]:
+        check_list_zwei.append(item)
+    
+    if ang_frak in check_list_zwei:
         return False
+    if ver_frak in check_list_zwei:
+        return False"""
+    print(check_list)
 
-def verteidiger_fraktion_check_datum(ver_frak,datum):
+def angreifbar(ang_frak,ver_frak):
     global cursor
-    cursor.execute("SELECT datum FROM invasion WHERE verteidiger_fraktion = ?",[ver_frak])
-    if str(datum) == str(cursor.fetchone()[0]):
-        return True
-    else:
+    cursor.execute("SELECT urlaub from urlaub WHERE fraktion = ?",[ang_frak])
+    urlaub = cursor.fetchone()[0]
+    #print(urlaub)
+    if urlaub == "False":
         return False
+    cursor.execute("SELECT urlaub FROM urlaub WHERE fraktion = ?",[ver_frak])
+    urlaub_zwei = cursor.fetchone()[0]
+    #print(urlaub_zwei)
+    if urlaub_zwei == "False":
+        return False
+    return True
+
+def contest_check(frakName):
+    global cursor 
+    cursor.execute("SELECT contested FROM contests WHERE fraktion = ?",[frakName])
+    if cursor.fetchone()[0] == "False":
+        return False
+    return True
 
 async def giveRole(self,fraktion,payload):
         guild = self.get_guild(payload.guild_id)
@@ -198,11 +276,50 @@ def rollencheck(fraktion,member):
         if item == fraktion:
             return True
     return False
-            
+
+def frakCheck(member):
+    global cursor
+    cursor.execute("SELECT rollen_id FROM fraktionen")
+    ffff = cursor.fetchall()
+    ffff = [int(x[0]) for x in ffff]
+    for item in [o.id for o in member.roles]:
+        for z in ffff:
+            if item == z:
+                return item
 #[<Guild id=564077511848493067 name='BT' shard_id=None chunked=True member_count=3>, <Guild id=579677389664157696 name='ðﾝﾕ﾿ðﾝﾖﾍðﾝﾖﾊ ðﾝﾕﾰðﾝﾖﾒðﾝﾖﾕðﾝﾖﾎðﾝﾖﾗðﾝﾖﾊ' shard_id=None chunked=True member_count=97>]
 
 
+def delete_invasions(frakName,datum):
+    global cursor
+    cursor.execute("DELETE FROM invasion WHERE angreifer_fraktion = ? AND verteidiger_fraktion = ?",[frakName,frakName])
+    conn.commit()
+    
+async def autocheck(self):
+    guild = self.get_guild(579677389664157696)#THe empire discord
+    channel = guild.get_channel(594852463727869952)#invasions-ankündigung
+    while True:
+        heute = datetime.datetime.now().date()
+        cursor.execute("SELECT festung,angreifer_fraktion,verteidiger_fraktion,datum,uhrzeit FROM invasion WHERE datum = ?",[str(heute)])
+        x = cursor.fetchall()
+        z = 0
+        while z < len(x):
+            k = x[z]
+            print(k)
+            festung = k[0]
+            ang_fraktion = k[1]
+            ver_fraktion = k[2]
+            datum = k[3]
+            uhrzeit = k[4]
+            z += 1
+        await asyncio.sleep(3600)
+
+
+        #print(len(x))
+        #print(x[0])
+        #await asyncio.sleep(10)
+
 class MyClient(discord.Client):
+    global cursor
     async def on_member_join(self,member):
         await member.add_roles(discord.utils.get(member.guild.roles,name = "noch keine Fraktion"),reason = "Server Beitritt",atomic=True)
         await member.send("Willkommen bei The EMPRIE! Schau dir die Fraktionen in #die-fraktinoen an und wähle eine in #fraktionsbeitritt aus, um die Rolle zu erhalten!")
@@ -212,16 +329,25 @@ class MyClient(discord.Client):
         #await invasioncheck(self)
         #print(festungen())
         #print(festungsNamen())
+        await autocheck(self)
 
     async def on_message(self, message):
         # don't respond to ourselves
         if message.author == self.user:
             return
 
+        if message.content.lower() == "!invasionen":
+            await message.channel.send(invasions())
+
         if message.content == 'ping':
             await message.channel.send('pong')
         
         if message.content.startswith("!remove"):
+            fraktion = frakCheck(message.author)
+            frakName = fraktionVonID(str(fraktion))
+            if contest_check(frakName):
+                await message.channel.send("Du wirst zurzeit herausgefordert, weshalb du ihn nicht entfernen kannst!")
+                return
             for item in [j.id for j in message.mentions]:
                 ausg = item
             person = message.guild.get_member(ausg)
@@ -246,7 +372,7 @@ class MyClient(discord.Client):
                 msg = message.content
                 channel = self.get_channel(589392821711011853)#requests
                 await channel.send(str(author)+"'s Request: "+msg[8:])
-        
+
         if message.content.lower() == "!playercount":
             await message.channel.send("Auf dem Server sind %s Mitglieder" % message.guild.member_count)
         
@@ -279,6 +405,7 @@ class MyClient(discord.Client):
             guild = message.guild
             author = message.author
             if (await authorcheck(self,author,guild)):
+
                 splitmsg = message.content[10:].lower().split(",")
                 #print(splitmsg)
                 festung = splitmsg[0]
@@ -316,25 +443,35 @@ class MyClient(discord.Client):
                 #print(tagForID[heuteTag])
 
                 tagDifferenz = InvtagID - heuteTag
+                print(tagDifferenz)
+                InvJahr = heute.year
+                InvMonat = int(heute.month)
                 
-
                 if monthrange(heute.year,heute.month)[1] < (heute.day + tagDifferenz):
-                    u = (heute.day + tagDifferenz) - monthrange(heute.year,heute.month)[1] 
+                    u = (heute.day + tagDifferenz) - monthrange(heute.year,heute.month)[1]
                     InvMonat += 1
                     InvTag = u
                     InvJahr = heute.year
-                elif monthrange(heute.year,heute.month)[1] > (heute.day + tagDifferenz):
+                    print(1)
+                    print(InvMonat)
+                    print(InvTag)
+                    print(InvJahr)
+                elif monthrange(heute.year,heute.month)[1] >= (heute.day + tagDifferenz):
                     u = heute.day + tagDifferenz 
                     InvMonat = heute.month
                     InvTag = u
                     InvJahr = heute.year
+                    print(2)
+                    print(InvMonat)
+                    print(InvTag)
+                    print(InvJahr)
                 
                 InvDatum = str(datetime.datetime(InvJahr,InvMonat,InvTag)).split()[0]
-                InvStunde = stunde
+                InvStunde = int(stunde)
                 
                 if tagDifferenz == 0:
-                    nowSek = heuteZeit.hour*3600+heuteZeit*60
-                    invSek = InvStunde*3600+ minute*60
+                    nowSek = int(heuteZeit.hour)*3600+int(heuteZeit.minute)*60
+                    invSek = InvStunde*3600+ int(minute)*60
                     if (invSek - nowSek < 72000):
                         await message.channel.send("Eine Invasion muss 20 Stunden vor Beginn angekündigt werden")
                         return
@@ -361,33 +498,111 @@ class MyClient(discord.Client):
                 #print(verteidigendeFraktion)
                 festung = fraktionenFestungen[verteidigendeFraktion]
                 #print(festung)
-                if angreifer_fraktion_check(frakName) and angreifer_fraktion_check_datum(frakName,InvDatum):
-                    await message.channel.send("Deine Fraktion greift schon jemanden an")
+                #print(frakName)
+                #print(InvDatum)
+                
+                InvDatum = datetime.datetime(InvJahr,InvMonat,InvTag,int(stunde),int(minute))
+
+                if InvDatum.date() < heute:
+                    await message.channel.send("Du kannst Invasionen erst in der Woche in der sie stattfinden sollen ankündigen")
                     return
-                if verteidiger_fraktion_check(frakName) and verteidiger_fraktion_check_datum(frakName,InvDatum):
-                    await message.channel.send("Deine Fraktion wird angegriffen, weshalb du keine Invasion Starten kannst")
+                if invasions_check_alles(frakName,heute,InvDatum,verteidigendeFraktion) == False:
+                    await message.channel.send("Du kannst keine Invasion starten da du schon in eine Invasion verwickelt bist oder die Festung/Fraktion die du angreifen möchtest dies ebenfalls zu seien scheint")
                     return
-                if angreifer_fraktion_check(verteidigendeFraktion) and angreifer_fraktion_check_datum(verteidigendeFraktion,InvDatum):
-                    await message.channel.send("Die Fraktion die du angreifen möchtest, greift schon jemand anderes an")
-                    return
-                if verteidiger_fraktion_check(verteidigendeFraktion) and verteidiger_fraktion_check_datum(verteidigendeFraktion,InvDatum):
-                    await message.channel.send("Die Fraktion die du angreifen möchtest, verteidigt schon jemanden anderes")
+                #print(InvDatum)
+                
+                if angreifbar(frakName,verteidigendeFraktion):
+                    await message.channel.send("Die Fraktion von dir oder die Fraktion die du angreifen möchtest ist dieses Wochende im Urlaub")
                     return
 
-                InvDatum = datetime.datetime(InvJahr,InvMonat,InvTag,int(stunde),int(minute))
-                #print(InvDatum)
+                if contest_check(frakName):
+                    await message.channel.send("Du wirst zurzeit herausgefordert, weshalb du keine Invasion starten kannst")
+                    return
+
+                if check_urlaub(frakName):
+                    await message.channel.send("Du bist zurzeit im Urlaub und kannst nicht bei Invasionen Teilnehmen")
+                    return
+                
+                if check_urlaub(verteidigendeFraktion):
+                    await message.channel.send("Die Fraktion die du angreifen möchtest ist im Urlaub!")
+                    return
                 invasion_ankündigung(festung,frakName,verteidigendeFraktion,InvDatum)
 
+                #pings
+                ang_frak_ping = message.guild.get_role(rol[frakName]).mention
+                ver_frak_ping = message.guild.get_role(rol[verteidigendeFraktion]).mention
+                channel = message.guild.get_channel(594852463727869952)#invasions-ankündingungen
+                await channel.send("Die Fraktion %s hat eine Invasion auf die Festung %s der Fraktion %s angekündigt. Die Invasion finden am %s.%s.%s um %s Uhr statt!" % (ang_frak_ping,festung, ver_frak_ping, InvDatum.date().day,InvDatum.date().month,InvDatum.date().year,InvDatum.time()))
+                
                 log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
-                #archivieren(nachricht)# Muss noch gemacht werden TODO
+                await message.channel.send("Erfolgreich")
+
+        if message.content.lower() == "!urlaub":
+            guild = message.guild
+            author = message.author
+            if (await authorcheck(self,author,guild)):
+                fraktion = await fcheck(self,message.author,message.guild,message.author)
+                frakName = fraktionVonID(str(fraktion)) 
+                if contest_check(frakName):
+                    await message.channel.send("Du wirst zurzeit herausgefordert, weshalb du keinen Urlaub starten kannst")
+                    return
                 
-                
+                cursor.execute("SELECT genutzt FROM urlaub WHERE fraktion = ?",[frakName])
+                if cursor.fetchone()[0] == "True":
+                    await message.channel.send("Du kannst keinen Urlaub einschalten, weil du den Urlaub schonmal genutzt hast!")
+                    return
+                set_urlaub(frakName,"True")
+                #set_urlaub_mit_datum(frakName,"True",str(datetime.datetime.now().date()))
+                await message.channel.send("Deine Fraktion ist für dieses Wochendende im Urlaub. Du bist somit von Invasionen ausgeschlossen")
+        
+        if message.content.lower() == "!urlauber":
+            await message.channel.send(urlauber())
+
+        if message.content == "!testpingme":
+            await message.channel.send("%s" % message.author.mention)
         
         if message.content == "!festungen":
-            global cursor
             await message.channel.send(festungen())
-            
         
+        if message.content.lower() == "!contest":
+            fraktion = frakCheck(message.author)
+            frakName = fraktionVonID(str(fraktion))
+            cursor.execute("SELECT contested FROM contests WHERE fraktion = ?",[frakName])
+            if cursor.fetchone()[0] == "True":
+                await message.channel.send("Dein Fraktionsleiter kann nicht herausgefordert werden, weil ihn schon jemand anderes herausgefordert hat")
+                return
+            cursor.execute("SELECT leiter_rollen_id FROM fraktionen WHERE rollen_id = ?",[fraktion])
+            leiter_rollen_id = cursor.fetchone()[0]
+            print(frakName)
+            print(leiter_rollen_id)
+            for member in message.guild.members:
+                if int(leiter_rollen_id) in [j.id for j in member.roles]:
+                    contested = member.id
+                    await message.channel.send("%s fordert seinen Fraktionsleiter %s zu einem Kampf um die Führungsposition auf. Währenddessen kann der jetzige Fraktionsleiter weder !remove oder !urlaub nutzen!" % (message.author.mention,member.mention))
+            set_contest(frakName,"True")
+
+            cursor.execute("UPDATE contests SET contested_id = ? WHERE fraktion = ?",[str(contested),frakName])
+            conn.commit()
+            cursor.execute("UPDATE contests SET contestor_id = ? WHERE fraktion = ?",[str(message.author.id),frakName])
+            conn.commit()
+
+        if message.content.lower() == "!uncontest":
+            fraktion = frakCheck(message.author)
+            frakName = fraktionVonID(str(fraktion))
+            cursor.execute("SELECT contested_id FROM contests WHERE fraktion = ?",[frakName])
+            contested = cursor.fetchone()[0]
+            cursor.execute("SELECT contestor_id FROM contests WHERE fraktion = ?",[frakName])
+            contestor = cursor.fetchone()[0]
+
+            if message.author.id == int(contested) or message.author.id == int(contestor):
+                set_contest(frakName,"False")
+                await message.channel.send("Herausforderung ist beendet")
+            else:
+                await message.channel.send("Du bist nicht der Fraktionsleiter oder der der ihn Herausfordert!")
+
+        if message.content.lower() == "!contestete":
+            await message.channel.send(contesteter()) 
+
         if message.content in ["!help","!hilfe"]:
             hilfe = """----------Commands für Nutzer----------
 !playercount
@@ -402,13 +617,14 @@ class MyClient(discord.Client):
 !add @<player>
 ----------Commands für Projektleitung/Developer---------
 !fraktionsnamenändern , <alterFraktionsname> , <NeuerFraktionsname>
-!fraktionsnachrichtändern , <Fraktion> , <Nachricht>"""
+!fraktionsnachrichtändern , <Fraktion> , <Nachricht>
+!festungsnamenändern, <Fraktion>,<neuerFestungsName>
+!purge <anzahl>"""
             await message.channel.send(hilfe)
             
                     
         
         if message.content.startswith("!add"):
-            global cursor
             cursor.execute("SELECT leiter_rollen_id FROM fraktionen")
             lrid = [x[0] for x in cursor.fetchall()]#Put Tuple values into List               
             for rollen in lrid:
@@ -483,6 +699,64 @@ class MyClient(discord.Client):
                 
                 fraktions_namen_andern(alterName,neuerName)
                 log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
+
+        if message.content.startswith("!unurlaub"):
+            if message.author.id in [521087967402655767,184385677301907456,442350475950424104,235492603028570112]:
+                msg = message.content
+                fraktion = msg.split(",")[1].split()
+                if len(fraktion) == 2:
+                    fraktion = fraktion[0] + " "+ fraktion[1]
+                elif len(fraktion) == 1:
+                    fraktion = fraktion[0]
+                cursor.execute("SELECT fraktion FROM fraktionen")
+                xxxx = cursor.fetchall()
+                xxxx = [x[0] for x in xxxx]
+                if not(fraktion in xxxx):
+                    await message.channel.send("Diese Fraktion gibt es nicht!")
+                    return
+                set_urlaub(fraktion,"False")
+                await message.channel.send("Die Fraktion %s wurde aus ihrem Urlaub gezogen!" % fraktion)
+
+        if message.content.startswith("!reseturlaub"):
+            if message.author.id in [521087967402655767,184385677301907456,442350475950424104,235492603028570112]:
+                msg = message.content
+                fraktion = msg.split(",")[1].split()
+                if len(fraktion) == 2:
+                    fraktion = fraktion[0] + " "+ fraktion[1]
+                elif len(fraktion) == 1:
+                    fraktion = fraktion[0]
+                cursor.execute("SELECT fraktion FROM fraktionen")
+                xxxx = cursor.fetchall()
+                xxxx = [x[0] for x in xxxx]
+                #print(xxxx)
+                #print(fraktion)
+                if not(fraktion in xxxx):
+                    await message.channel.send("Diese Fraktion gibt es nicht!")
+                    return
+                cursor.execute("UPDATE urlaub SET genutzt = ? WHERE fraktion = ?",["False",fraktion])
+                conn.commit()
+                await message.channel.send("Urlaub der Fraktion %s wurde resettet" % fraktion)
+
+        if message.content.startswith("!festungsnamenändern"):
+            if message.author.id in [521087967402655767,184385677301907456,442350475950424104,235492603028570112]:
+                msg = message.content
+                
+                fraktion = msg.split(",")[1].split()
+                if len(fraktion) == 2:
+                    fraktion = fraktion[0] + " "+ fraktion[1]
+                elif len(fraktion) == 1:
+                    fraktion = fraktion[0]
+                
+                newFestName = msg.split(",")[2].split()
+                if len(newFestName) == 2:
+                    newFestName = newFestName[0] + " " + newFestName[1]
+                if len(newFestName) == 1:
+                    newFestName = newFestName[0]
+                
+                #print(newFestName)
+                festungsnamen_andern(fraktion,newFestName)
+                log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
+                await message.channel.send("Erfolgreich")
         
         if message.content.lower() == "!leave":
             for item in [k.id for k in message.author.roles]:
