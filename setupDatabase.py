@@ -10,7 +10,9 @@ cursor.execute("CREATE TABLE fraktionen (fraktion TEXT PRIMARY KEY, rollen_id TE
 cursor.execute('''CREATE TABLE invasion (festung TEXT, angreifer_fraktion TEXT, verteidiger_fraktion TEXT, datum TEXT, uhrzeit TEXT,
                 FOREIGN KEY (angreifer_fraktion) REFERENCES fraktionen(fraktion), FOREIGN KEY (verteidiger_fraktion) REFERENCES fraktionen(fraktion))''')
 cursor.execute("CREATE TABLE logs (person TEXT, person_id TEXT, command TEXT, channel TEXT, datum TEXT, uhrzeit TEXT)") #Name und ID, um exploit durch renames zu verhindern
-cursor.execute('''CREATE TABLE urlaub (fraktion TEXT PRIMARY KEY, urlaub TEXT,
+cursor.execute('''CREATE TABLE urlaub (fraktion TEXT PRIMARY KEY, urlaub TEXT,genutzt TEXT,datum TEXT,
+                FOREIGN KEY (fraktion) REFERENCES fraktionen(fraktion))''')
+cursor.execute('''CREATE TABLE contests (fraktion TEXT PRIMARY KEY, contested TEXT,contested_id TEXT,contestor_id TEXT,
                 FOREIGN KEY (fraktion) REFERENCES fraktionen(fraktion))''')
 
 
@@ -89,22 +91,34 @@ festungen = [("Frosthammer","Nordmänner"),
              ("Anubrave#","Ägypter"),
              ("Wälder von Pantheon","Ureinwohner"),
              ("Medi Terra","Mystischer Orden"),
-             ("Ulaanbataar#","Mongolen"),
+             ("Golia","Mongolen"),
              ("Umbra","Dunkelritter"),
              ("Kyoto","Samurai")]
 
 cursor.executemany("INSERT INTO festungen VALUES (?,?)",festungen)
 
-urlaub = [("Nordmänner","False"),
-          ("Wilder Bergstamm","False"),
-          ("Piraten","False"),
-          ("Ägypter","False"),
-          ("Ureinwohner","False"),
-          ("Mystischer Orden","False"),
-          ("Mongolen","False"),
-          ("Dunkelritter","False"),
-          ("Samurai","False")]
+urlaub = [("Nordmänner","False","False",""),
+          ("Wilder Bergstamm","False","False",""),
+          ("Piraten","False","False",""),
+          ("Ägypter","False","False",""),
+          ("Ureinwohner","False","False",""),
+          ("Mystischer Orden","False","False",""),
+          ("Mongolen","False","False",""),
+          ("Dunkelritter","False","False",""),
+          ("Samurai","False","False","")]
 
-cursor.executemany("INSERT INTO urlaub VALUES(?,?)",urlaub)
+cursor.executemany("INSERT INTO urlaub VALUES(?,?,?,?)",urlaub)
+
+contest = [("Nordmänner","False","None","None"),
+           ("Wilder Bergstamm","False","None","None"),
+           ("Piraten","False","None","None"),
+           ("Ägypter","False","None","None"),
+           ("Ureinwohner","False","None","None"),
+           ("Mystischer Orden","False","None","None"),
+           ("Mongolen","False","None","None"),
+           ("Dunkelritter","False","None","None"),
+           ("Samurai","False","None","None")]
+
+cursor.executemany("INSERT INTO contests VALUES(?,?,?,?)",contest)
 conn.commit()
 conn.close()
