@@ -9,242 +9,19 @@ import datetime
 import math
 import pyutil
 import re
-import sqlite3
 import discordToken
-
+from datenbank import *
+from pseudodatenbank import *
 
 TOKEN = discordToken.get_token()
-fraktionen = {"Dunkelritter":587938986262265859,"Wilder Bergstamm":587938913092370442,"Mystischer Orden":587939070353735730,"Nordmänner":587938861116817411,"Piraten":587939283701334016,"Ägypter":587939233902362634,"Ureinwohner":587939210644815882,"Mongolen":587939310414725140,"Samurai":587938954859249696}
-allFractions = ["Dunkelritter","Wilder Bergstamm","Mystischer Orden","Nordmänner","Piraten","Ägypter","Ureinwohner","Mongolen","Samurai"]
-
-conn = sqlite3.connect('empire.db')
-cursor = conn.cursor()
-
-leiter = [587649118978179072,587648048641867776,587648225360740384,587648422761463818,587648931920347136,587648869551308801,587648819680903171,587648591548383232,587648705990098947]
-#Eisiger Mensch,Stammes Häuptling,Piratenkönig, Sultan,Ältester,Hoher Priester,König des Küstenvolkes,König der Dunkelritter,Kaiser
-zuge = {587649118978179072:587376412625731614,#Eisiger Meister,Normänner
-587648048641867776:587376373849522257,#Stammes Häuptling, Wilder Bergstamm
-587648225360740384:587376215162355743,#Piratenkönig, Pirat
-587648422761463818:587376337077927956,#Sultan, ägypter
-587648931920347136:587376464815456398,#Ältester, Ureinwohner
-587648869551308801:587376621846265896,#Hoher Priester, Mysticher Orden
-587648819680903171:587376695691051017,#Kaiserin, Römer# ,Mongolen
-587648591548383232:587376791170187274,#König der Dunkelritter, Dunkelritter
-587648705990098947:587376876184666123}#Kaiser, Samurai
+fraktionsbeitritt_message = {"Dunkelritter":587938986262265859,"Wilder Bergstamm":587938913092370442,"Mystischer Orden":587939070353735730,"Nordmänner":587938861116817411,"Piraten":587939283701334016,"Ägypter":587939233902362634,"Ureinwohner":587939210644815882,"Mongolen":587939310414725140,"Samurai":587938954859249696}
 
 channels = {"fraktionswechsel":588769134158807243}
-
-rollenID = {587376412625731614:"Nordmänner",
-587376373849522257:"Wilder Bergstamm",
-587376215162355743:"Piraten",
-587376337077927956:"Ägypter",
-587376464815456398:"Ureinwohner",
-587376621846265896:"Mystischer Orden",
-587376695691051017:"Mongolen",
-587376791170187274:"Dunkelritter",
-587376876184666123:"Samurai"}
-
-rol = {"Dunkelritter":587376791170187274,"Samurai":587376876184666123,"Mongolen":587376695691051017,"Mystischer Orden":587376621846265896,
-"Ureinwohner":587376464815456398,"Ägypter":587376337077927956,"Piraten":587376215162355743,"Wilder Bergstamm":587376373849522257,
-"Nordmänner":587376412625731614}
 
 tagForID = {0:"monday",1:"tuesday",2:"wednesday",3:"thursday",4:"friday",5:"saturday",6:"sunday"}
 datetimetage = {"monday":0,"tuesday":1,"wednesday":2,"thursday":3,"friday":4,"saturday":5,"sunday":6}
 tageInEnglisch = {"samstag":"saturday","sonntag":"sunday"}
 tageInDeutsch = {"monday":"montag","tuesday":"dienstag","wednesday":"mittwoch","thursday":"donnerstag","friday":"freitag","saturday":"samstag","sunday":"sonntag"}
-
-#festungen = {"dunkelBurg":"Dunkelritter","palast":"Samurai","rom":"Römer","kirche":"Mystischer Orden","wälder das pantheon":"Ureinwohner",
-#"pyramide":"Ägypter","boot":"Piraten","bergfort":"Wilder Bergstamm","eiskappen":"Nordmänner"}
-
-def log(person_name,person_id,command,channel_name,datum): #command zeigt die volle message, datum als datetime.datetime object
-    global cursor
-    datum = str(datum).split()
-    tag = datum[0]
-    uhrzeit = datum[1][:5]
-    cursor.execute("INSERT INTO logs VALUES (?,?,?,?,?,?)",[str(person_name),str(person_id),command,str(channel_name),tag,uhrzeit])
-    conn.commit()
-
-def festungsnamen_andern(fraktion,festung):
-    global cursor
-    cursor.execute("UPDATE festungen SET festung = ? WHERE fraktion = ?",[festung,fraktion])
-    conn.commit()
-
-def leiter_wechsel(fraktion,leiter_id): #Wenn sich der Leiter einer Stadt ändert
-    global cursor
-    cursor.execute("UPDATE fraktionen SET leiter_id = ? WHERE fraktion = ?",[leiter_id,fraktion])
-    conn.commit()
-
-def festung_einnahme(festung,fraktion): #Wenn eine Basis eingenommen wird. "fraktion" ist der neue Besitzer der Stadt
-    global cursor
-    cursor.execute("UPDATE festungen SET fraktion = ? WHERE festung = ?",[fraktion,festung])
-    conn.commit()
-
-def invasion_ankündigung(festung,angreifer_fraktion,verteidiger_fraktion,datum): #datum als datetime.datetime object
-    global cursor
-    datum = str(datum).split()
-    tag = datum[0]
-    uhrzeit = datum[1][:5]
-    cursor.execute("INSERT INTO invasion VALUES (?,?,?,?,?)",[festung,angreifer_fraktion,verteidiger_fraktion,tag,uhrzeit])
-    conn.commit()
-
-def set_contest(fraktion,mode):
-    global cursor
-    cursor.execute("UPDATE contests SET contested = ? WHERE fraktion = ?",[mode,fraktion])
-    conn.commit()
-
-def set_urlaub(fraktion,mode):
-    global cursor
-    cursor.execute("UPDATE urlaub SET urlaub = ? WHERE fraktion = ?",[mode,fraktion])
-    cursor.execute("UPDATE urlaub SET genutzt = ? WHERE fraktion = ?",["True",fraktion])
-    conn.commit()
-
-def set_urlaub_mit_datum(fraktion,mode,datum):
-    global cursor
-    cursor.execute("UPDATE urlaub SET urlaub = ? WHERE fraktion = ?",[mode,fraktion])
-    cursor.execute("UPDATE urlaub SET genutzt = ? WHERE fraktion = ?",["True",fraktion])
-    cursor.execute("UPDATE urlaub SET datum = ? WHERE fraktion = ?",[datum,fraktion])
-    conn.commit()
-
-def check_urlaub(fraktion):
-    global cursor
-    cursor.execute("SELECT urlaub FROM urlaub WHERE fraktion = ?",[fraktion])
-    fff = cursor.fetchone()[0]
-    if fff == "False":
-        return False
-    if fff == "True":
-        return True
-
-def urlauber():
-    global cursor
-    cursor.execute("SELECT fraktion,urlaub FROM urlaub")
-    return "\n".join([x[0] + " : " +  x[1] for x in cursor.fetchall()])
-
-def fraktions_liste():
-    global cursor
-    cursor.execute("SELECT fraktion FROM fraktionen")
-    return "\n".join([x[0]  for x in cursor.fetchall()])
-
-def contesteter():
-    global cursor
-    cursor.execute("SELECT fraktion, contested FROM contests")
-    return "\n".join([x[0] + " : " +  x[1] for x in cursor.fetchall()])
-
-def festungen():
-    global cursor
-    cursor.execute("SELECT festung,fraktion FROM festungen",)
-    return "\n".join([x[0] + " : " +  x[1] for x in cursor.fetchall()])
-
-def festungenZwei():
-    global cursor
-    cursor.execute("SELECT festung,fraktion FROM festungen",)
-    return ",".join([x[0] + ":" +  x[1] for x in cursor.fetchall()])
-
-def festungsNamen():
-    global cursor
-    cursor.execute("SELECT festung from festungen")
-    return [x[0].lower() for x in cursor.fetchall()]
-
-def invasions():
-    global cursor
-    cursor.execute("SELECT festung,angreifer_fraktion,verteidiger_fraktion,datum,uhrzeit FROM invasion")
-    Inv_Txt = "\n".join(["Festung: "+x[0] + ", Angreifer: " +  x[1] + ",Verteidiger: " + x[2] + ", Datum: " + x[3] +", Uhrzeit: " +x[4] for x in cursor.fetchall()])
-    if Inv_Txt == "":
-        return "Es gibt keine Invasionen"
-    else:
-        return Inv_Txt
-
-def fraktions_nachricht(fraktion): #Holt die Nachricht zu diesem fraktionsnamen raus
-    global cursor
-    cursor.execute("SELECT nachricht FROM fraktionen WHERE fraktion = ?",[fraktion])
-    return cursor.fetchone()[0]
-    #print(cursor.fetchone()[0])
-
-def fraktions_nachricht_andern(fraktion,nachricht):
-    global cursor
-    cursor.execute("UPDATE fraktionen SET nachricht = ? WHERE fraktion = ?",[nachricht,fraktion])
-    conn.commit()
-    
-def fraktions_namen_andern(alterName,neuerName):
-    global cursor
-    cursor.execute("UPDATE fraktionen SET fraktion = ? WHERE fraktion = ?",[neuerName,alterName])
-    cursor.execute("UPDATE festungen SET fraktion = ? WHERE fraktion = ?",[neuerName,alterName])
-    conn.commit()
-
-def fraktionVonID(rolle_id):
-    global cursor
-    cursor.execute("SELECT fraktion FROM fraktionen WHERE rollen_id = ?",[rolle_id])
-    return cursor.fetchone()[0]
-
-def angreifer_fraktion_check(ang_frak):
-    global cursor
-    cursor.execute("SELECT angreifer_fraktion FROM invasion")
-    ff = cursor.fetchall()
-    #print([x[0] for x in cursor.fetchall()])
-    #print(ang_frak)
-    if ang_frak in [x[0] for x in ff]:
-        #print(True)
-        return True
-    else:
-        #print(False)
-        return False
-
-
-def reset_urlaub(fraktion):
-    cursor.execute("UPDATE urlaub SET genutzt = ? WHERE fraktion = ?",["False",fraktion])
-    conn.commit()
-    
-
-def invasions_check_alles(ang_frak,date,invDatum,ver_frak):
-    global cursor
-    invDatum = str(invDatum).split()[0]
-    #print(invDatum)
-    cursor.execute("SELECT angreifer_fraktion,verteidiger_fraktion FROM invasion WHERE datum = ?",[invDatum])    
-    ang_ver_frak_list = cursor.fetchall()
-    check_list = []
-    for item in [x[0] for x in ang_ver_frak_list]:
-        check_list.append(item)
-    for item in [x[1] for x in ang_ver_frak_list]:
-        check_list.append(item)
-    
-    if ang_frak in check_list:
-        return False
-    if ver_frak in check_list:
-        return False
-
-    """cursor.execute("SELECT angreifer_fraktion,verteidiger_fraktion FROM invasion WHERE datum > ?",[invDatum])
-    ang_ver_list_spater = cursor.fetchall()
-    check_list_zwei = []
-    for item in [x[0] for x in ang_ver_list_spater]:
-        check_list_zwei.append(item)
-    for item in [x[1] for x in ang_ver_list_spater]:
-        check_list_zwei.append(item)
-    
-    if ang_frak in check_list_zwei:
-        return False
-    if ver_frak in check_list_zwei:
-        return False"""
-    #print(check_list)
-
-def angreifbar(ang_frak,ver_frak):
-    global cursor
-    cursor.execute("SELECT urlaub from urlaub WHERE fraktion = ?",[ang_frak])
-    urlaub = cursor.fetchone()[0]
-    #print(urlaub)
-    if urlaub == "False":
-        return False
-    cursor.execute("SELECT urlaub FROM urlaub WHERE fraktion = ?",[ver_frak])
-    urlaub_zwei = cursor.fetchone()[0]
-    #print(urlaub_zwei)
-    if urlaub_zwei == "False":
-        return False
-    return True
-
-def contest_check(frakName):
-    global cursor 
-    cursor.execute("SELECT contested FROM contests WHERE fraktion = ?",[frakName])
-    if cursor.fetchone()[0] == "False":
-        return False
-    return True
 
 
 def fraktionsnamen_parsen(name):
@@ -256,11 +33,6 @@ def fraktionsnamen_parsen(name):
         print("dafuq")
         raise Exception
     return name
-
-
-
-
-
 
 
 async def giveRole(self,fraktion,payload):
@@ -275,29 +47,23 @@ async def giveRole(self,fraktion,payload):
 async def check(self,payload):
     guild = self.get_guild(payload.guild_id)
     member = guild.get_member(payload.user_id)
-    for rolle in [f.name for f in member.roles]:
-        if rolle in allFractions:
-            await member.send("Du bist leider schon in einer Fraktion! Bitte kontaktiere die Projekt Leitung oder deinen Fraktionsleiter um aus deiner Fraktion auszutreten und somit einer neuen Beizutreten.")
+    for rolle in member.roles:
+        if rolle.name in alle_fraktionen():
+            await member.send("Du bist leider schon in einer Fraktion! Bitte kontaktiere die Projekt-Leitung oder deinen Fraktionsleiter um aus deiner Fraktion auszutreten und somit einer neuen Beizutreten.")
             return True
     return False
 
 
     
-async def authorcheck(self,autor,guild):
+async def authorcheck(self,autor):
     for item in [z.id for z in autor.roles]:
         #print(item)
-        if item in leiter:
+        if item in alle_leader_rollen():
             return True
     return False
     
-async def fcheck(self,autor,guild,mention):
-     #print(mention)
-     for item in [a.id for a in autor.roles]:
-         if item in leiter:
-             for rolle in [r.id for r in mention.roles]:
-                 if rolle == zuge[item]:
-                     return rolle
-             return False
+async def fcheck(self,autor,mention):
+    return bool(list(filter(lambda role : role.id in map(lambda f : f.member_id, filter(lambda f : f.leader_id in [role.id for role in autor.roles],get_FRAKTIONEN())),mention.roles)))
 
 
 def rollencheck(fraktion,member):
@@ -306,23 +72,10 @@ def rollencheck(fraktion,member):
             return True
     return False
 
-def frakCheck(member):
-    global cursor
-    cursor.execute("SELECT rollen_id FROM fraktionen")
-    ffff = cursor.fetchall()
-    ffff = [int(x[0]) for x in ffff]
-    for item in [o.id for o in member.roles]:
-        for z in ffff:
-            if item == z:
-                return item
+
 #[<Guild id=564077511848493067 name='BT' shard_id=None chunked=True member_count=3>, <Guild id=579677389664157696 name='ðﾝﾕ﾿ðﾝﾖﾍðﾝﾖﾊ ðﾝﾕﾰðﾝﾖﾒðﾝﾖﾕðﾝﾖﾎðﾝﾖﾗðﾝﾖﾊ' shard_id=None chunked=True member_count=97>]
 
 
-def delete_invasions(frakName,datum):
-    global cursor
-    cursor.execute("DELETE FROM invasion WHERE angreifer_fraktion = ? AND verteidiger_fraktion = ?",[frakName,frakName])
-    conn.commit()
-    
 async def autocheck(self):
     guild = self.get_guild(579677389664157696)#THe empire discord
     channel = guild.get_channel(594852463727869952)#invasions-ankündigung
@@ -345,14 +98,9 @@ async def autocheck(self):
             z += 1"""
         
         
-        cursor.execute("UPDATE urlaub SET urlaub = ? WHERE datum = ?",["False",str(heute)])
+        cursor.execute("UPDATE urlaub SET urlaub = False WHERE datum = ?",[str(heute + timedelta(days-1))]) #Urlaub erst beenden, wenn er schon gestern abgelaufen ist (damit der letzte Tag inklusive ist)
         conn.commit()
         await asyncio.sleep(1800)
-
-
-        #print(len(x))
-        #print(x[0])
-        #await asyncio.sleep(10)
 
 class MyClient(discord.Client):
     global cursor
@@ -390,22 +138,22 @@ class MyClient(discord.Client):
             person = message.guild.get_member(ausg)
             #print(person)
             #person = message.guild.get_member(message.mentions.id)
-            if (await authorcheck(self,message.author,message.guild)):
-                spieler = await fcheck(self,message.author,message.guild,person)
+            if (await authorcheck(self,message.author)):
+                spieler = await fcheck(self,message.author,person)
                 if spieler == False:
                     await message.channel.send("Die Person die du rauswerfen möchtest, ist nicht in deiner Fraktion")
                 else:
                     await person.remove_roles(message.guild.get_role(spieler),reason = "Fraktionsleiter hat ihn rausgeworfen",atomic=True)
                     #await message.channel.send(str(person.nick) + " wurde aus deiner Fraktion geworfen")
                     channel = self.get_channel(channels["fraktionswechsel"])
-                    await channel.send(str(person) + " wurde aus der fraktion " +str(rollenID[spieler])+ " geworfen")
+                    await channel.send(f"{person} wurde aus der fraktion {fraktion_von_rolle[spieler]} geworfen")
                     await person.add_roles(discord.utils.get(message.guild.roles,name = "noch keine Fraktion"),reason = "Aus der Fraktion geworfen",atomic=True)
                     log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
             
         if message.content.startswith("!request"):
             guild = message.guild
             author = message.author
-            if (await authorcheck(self,author,guild)):
+            if (await authorcheck(self,author)):
                 msg = message.content
                 channel = self.get_channel(589392821711011853)#requests
                 await channel.send(str(author)+"'s Request: "+msg[8:])
@@ -414,7 +162,7 @@ class MyClient(discord.Client):
             await message.channel.send("Auf dem Server sind %s Mitglieder" % message.guild.member_count)
         
         if message.content.startswith("!pin"):
-            if (await authorcheck(self,message.author,message.guild)):
+            if (await authorcheck(self,message.author)):
                 await message.pin()
                 log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
         
@@ -423,12 +171,11 @@ class MyClient(discord.Client):
             await message.channel.send("10 Sekunden sind um")
         
         if message.content.lower() == "!fraktionsverteilung":
-            global fraktionen
-            rollenanzahl = {name:0 for name in fraktionen.keys()}
+            rollenanzahl = {name:0 for name in alle_fraktionen()}
             
             for member in message.guild.members:
                 for rolle in rollenanzahl.keys():
-                    rollenanzahl[rolle] += rollencheck(rol[rolle],member)
+                    rollenanzahl[rolle] += rollencheck(fraktion_von_rolle(rolle),member)
                     
                     
             nachricht = "\n".join([f"{rolle}: {rollenanzahl[rolle]}" for rolle in rollenanzahl])
@@ -441,7 +188,7 @@ class MyClient(discord.Client):
 
             guild = message.guild
             author = message.author
-            if (await authorcheck(self,author,guild)):
+            if (await authorcheck(self,author)):
 
                 splitmsg = message.content[10:].lower().split(",")
                 #print(splitmsg)
@@ -462,10 +209,10 @@ class MyClient(discord.Client):
                 minute = splitmsg[1]
                 nachricht = message.content[9:].lower().strip()
                 #print(nachricht)
-                fraktion = await fcheck(self,message.author,message.guild,message.author)
+                fraktion = await fcheck(self,message.author,message.author)
                 frakName = fraktionVonID(str(fraktion))
                 #print(frakName)
-                nachricht= nachricht +","+str(guild.get_role(fraktion).name)+"\n"
+                nachricht= f"{nachricht},{guild.get_role(fraktion).name}\n"
                 #print(nachricht)
 
                 #date
@@ -551,8 +298,8 @@ class MyClient(discord.Client):
                 invasion_ankündigung(festung,frakName,verteidigendeFraktion,InvDatum)
 
                 #pings
-                ang_frak_ping = message.guild.get_role(rol[frakName]).mention
-                ver_frak_ping = message.guild.get_role(rol[verteidigendeFraktion]).mention
+                ang_frak_ping = message.guild.get_role(fraktion_von_rolle(frakName)).mention
+                ver_frak_ping = message.guild.get_role(fraktion_von_rolle(verteidigendeFraktion)).mention
                 channel = message.guild.get_channel(594852463727869952)#ankündingungen
                 await channel.send("Die Fraktion %s hat eine Invasion auf die Festung %s der Fraktion %s angekündigt. Die Invasion finden am %s.%s.%s um %s:%s Uhr statt!" % (ang_frak_ping,festung, ver_frak_ping, InvDatum.date().day,InvDatum.date().month,InvDatum.date().year,InvDatum.hour,str(InvDatum.time()).split(":")[1]))
                 
@@ -562,8 +309,8 @@ class MyClient(discord.Client):
         if message.content.lower() == "!urlaub":
             guild = message.guild
             author = message.author
-            if (await authorcheck(self,author,guild)):
-                fraktion = await fcheck(self,author,guild,author)
+            if (await authorcheck(self,author)):
+                fraktion = await fcheck(self,author,author)
                 frakName = fraktionVonID(str(fraktion)) 
                 #if contest_check(frakName):   
                 #    await message.channel.send("Du wirst zurzeit herausgefordert, weshalb du keinen Urlaub starten kannst")
@@ -778,7 +525,7 @@ class MyClient(discord.Client):
         
         if message.content.lower() == "!leave":
             for item in [k.id for k in message.author.roles]:
-                if item in rollenID.keys():
+                if item in get_rollen_ids():
                     await message.author.remove_roles(message.guild.get_role(item),reason = "!leave", atomic = True)
                     await message.author.add_roles(message.guild.get_role(587406516567539801),reason = "!leave",atomic = True)
                     channel = self.get_channel(channels["fraktionswechsel"])
@@ -787,17 +534,17 @@ class MyClient(discord.Client):
         
     async def on_raw_reaction_add(self,payload):
         if payload.channel_id == 587938281052700683:            
-            if payload.message_id == fraktionen["Mystischer Orden"]: #Heiliger Orden
+            if payload.message_id == fraktionsbeitritt_message["Mystischer Orden"]: #Heiliger Orden
                 if not (await check(self,payload)):
                     #await giveRole(self,"Mystischer Orden",payload)
                     guild = self.get_guild(payload.guild_id)
                     #message = guild.get_message(payload.message_id)
                     spieler = guild.get_member(payload.user_id)
-                    await spieler.send("Um dem Mystischem Orden beizutreten musst du dich bei @Dr_EckigLP#8801 melden")
+                    await spieler.send("Um dem Mystischen Orden beizutreten musst du dich bei @Dr_EckigLP#8801 melden")
                     return
                     
             for fraktionsname in ["Nordmänner","Piraten","Ägypter","Ureinwohner","Mongolen","Samurai","Dunkelritter","Wilder Bergstamm"]:
-                if payload.message_id == fraktionen[fraktionsname]:
+                if payload.message_id == fraktionsbeitritt_message[fraktionsname]:
                     if not (await check(self,payload)):
                         await giveRole(self,fraktionsname,payload)
                         return
