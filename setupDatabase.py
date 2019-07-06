@@ -70,7 +70,7 @@ ABER beachtet das ihr in einer Fraktion seid und ihr euch wie ein Mongole benehm
 Viel Spaß im Projekt! Auf eine friedliche oder düstere  Zeit! :camel:'''),
               ("Dunkelritter","587376791170187274","351634859082645505","587648591548383232",'''Willkommen bei den Dunkelrittern!:racehorse:
 Du bist einer dunklen Fraktion beigetreten welche in der nord-östlichen Zone des Kontinents lebt.
-Verhalte dich wie ein Dunkelritter du kannst natürlich auch ein Knappe oder ein Magier sein! :black_heart:
+Verhalte dich wie ein Dunkelritter! :black_heart:
 Das hier ist ein Fulltime Roleplay Projekt das heißt ihr spielt einen Charakter. 
 Welche Eigenschaften der Charakter hat ist euch überlassen. Ihr dürft also euch selbst spielen 
 ABER beachtet das ihr in einer Fraktion seid und ihr euch wie ein Ritter/Knappe/Magier benehmen müsst!
