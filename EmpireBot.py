@@ -1,26 +1,24 @@
 #Made by Berkant03 and MisterL2
 
-
 import discord
 from discord.utils import get
 import time
 import threading
 import asyncio
-import simplejson
 import datetime
 import math
 import pyutil
 import re
 import sqlite3
+import discordToken
 
-TOKEN = ''
 
+TOKEN = discordToken.get_token()
 fraktionen = {"Dunkelritter":587938986262265859,"Wilder Bergstamm":587938913092370442,"Mystischer Orden":587939070353735730,"Nordmänner":587938861116817411,"Piraten":587939283701334016,"Ägypter":587939233902362634,"Ureinwohner":587939210644815882,"Mongolen":587939310414725140,"Samurai":587938954859249696}
 allFractions = ["Dunkelritter","Wilder Bergstamm","Mystischer Orden","Nordmänner","Piraten","Ägypter","Ureinwohner","Mongolen","Samurai"]
 
 conn = sqlite3.connect('empire.db')
 cursor = conn.cursor()
-
 
 leiter = [587649118978179072,587648048641867776,587648225360740384,587648422761463818,587648931920347136,587648869551308801,587648819680903171,587648591548383232,587648705990098947]
 #Eisiger Mensch,Stammes Häuptling,Piratenkönig, Sultan,Ältester,Hoher Priester,König des Küstenvolkes,König der Dunkelritter,Kaiser
