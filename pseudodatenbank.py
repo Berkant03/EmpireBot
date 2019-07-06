@@ -46,3 +46,6 @@ def alle_leader_rollen():
 
 def get_FRAKTIONEN():
     return FRAKTIONEN
+
+def get_projekt_leitung():
+    return [521087967402655767,184385677301907456,442350475950424104,235492603028570112]

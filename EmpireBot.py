@@ -343,7 +343,7 @@ class MyClient(discord.Client):
             await message.channel.send(urlauber())
 
         if message.content == "!testpingme":
-            await message.channel.send("%s" % message.author.mention)
+            await message.channel.send(f"{message.author.mention}")
         
         if message.content == "!festungen":
             await message.channel.send(festungen())
@@ -362,7 +362,7 @@ class MyClient(discord.Client):
             for member in message.guild.members:
                 if int(leiter_rollen_id) in [j.id for j in member.roles]:
                     contested = member.id
-                    await message.channel.send("%s fordert seinen Fraktionsleiter %s zu einem Kampf um die Führungsposition auf. Währenddessen kann der jetzige Fraktionsleiter weder !remove oder !urlaub nutzen!" % (message.author.mention,member.mention))
+                    await message.channel.send(f"{message.author.mention} fordert seinen Fraktionsleiter {member.mention} zu einem Kampf um die Führungsposition auf! Währenddessen kann der jetzige Fraktionsleiter weder !remove oder !urlaub nutzen!")
             
             await message.guild.get_member(contested).remove_roles(message.guild.get_role(int(leiter_rollen_id)),reason="Contest",atomic=True)
             await message.guild.get_member(contested).remove_roles(message.guild.get_role(587954721856421888),reason="Contest",atomic=True)
@@ -437,24 +437,21 @@ class MyClient(discord.Client):
             for member in message.guild.members:
                 if 587406516567539801 in [o.id for o in member.roles]:
                     fraktionslose += 1
-            await message.channel.send("Auf dem Server haben %s Personen noch keine Fraktion" % fraktionslose)
+            await message.channel.send(f"Auf dem Server haben {fraktionslose} Personen noch keine Fraktion")
          
         if message.content.lower().startswith("!purge"):
             anzahl = message.content.split()
             def check(m):
                 return m.content and m.channel
             for r in [b.id for b in message.author.roles]:
-                if r in [579701404289990685,587711467793678350,587939760878780416]:
+                if r in get_projekt_leitung():
                     msd = await message.channel.send("Bist du dir Sicher? Antworte mit ja oder nein!")
                     msg = await self.wait_for('message',check=check)
                     if msg.content.lower() == "ja":
                         log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
-                        await message.delete()
-                        await msd.delete()
-                        await msg.delete()
-                        await msg.channel.purge(limit=int(anzahl[1]))
+                        await message.channel.purge(limit=int(anzahl[1]) + 3)
                     elif msg.content.lower() == "nein":
-                        await msg.channel.send("Abgebrochen")
+                        await message.channel.send("Abgebrochen")
         
         if message.content.lower() == "!givedeveloper":#Für Testzwecke falls ich den Server leave dann kann ich mir diese Rolle wiedergeben
             if message.author.id == 235492603028570112:
@@ -462,7 +459,7 @@ class MyClient(discord.Client):
                 log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
         
         if message.content.startswith("!fraktionsnachrichtändern"):
-            if message.author.id in [521087967402655767,184385677301907456,442350475950424104,235492603028570112]:
+            if message.author.id in get_projekt_leitung():
                 msg = message.content
                 frak = fraktionsnamen_parsen(msg.split(",")[1].split())
                 txt = msg.split(", ")[2]
@@ -471,7 +468,7 @@ class MyClient(discord.Client):
                 
         
         if message.content.startswith("!fraktionsnamenändern"):
-            if message.author.id in [521087967402655767,184385677301907456,442350475950424104,235492603028570112]:
+            if message.author.id in get_projekt_leitung():
                 msg = message.content
                 
                 alter_name = fraktionsnamen_parsen(msg.split(",")[1].split())
@@ -482,7 +479,7 @@ class MyClient(discord.Client):
                 log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
 
         if message.content.startswith("!unurlaub"):
-            if message.author.id in [521087967402655767,184385677301907456,442350475950424104,235492603028570112]:
+            if message.author.id in get_projekt_leitung():
                 msg = message.content
                 fraktion = fraktionsnamen_parsen(msg.split(",")[1].split())
                 cursor.execute("SELECT fraktion FROM fraktionen")
@@ -495,7 +492,7 @@ class MyClient(discord.Client):
                 await message.channel.send("Die Fraktion %s wurde aus ihrem Urlaub gezogen!" % fraktion)
 
         if message.content.startswith("!reseturlaub"):
-            if message.author.id in [521087967402655767,184385677301907456,442350475950424104,235492603028570112]:
+            if message.author.id in get_projekt_leitung():
                 msg = message.content
                 fraktion = fraktionsnamen_parsen(msg.split(",")[1].split())
                 cursor.execute("SELECT fraktion FROM fraktionen")
@@ -512,7 +509,7 @@ class MyClient(discord.Client):
                 await message.channel.send("Urlaub der Fraktion %s wurde resettet" % fraktion)
 
         if message.content.startswith("!festungsnamenändern"):
-            if message.author.id in [521087967402655767,184385677301907456,442350475950424104,235492603028570112]:
+            if message.author.id in get_projekt_leitung():
                 msg = message.content
                 
                 fraktion = fraktionsnamen_parsen(msg.split(",")[1].split())
