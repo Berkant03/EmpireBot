@@ -203,8 +203,11 @@ def frakCheck(member):
             if item == z:
                 return item
 
-def delete_invasions(frakName,datum):
+def delete_invasions_urlaub(frakName):
     global cursor
-    cursor.execute("DELETE FROM invasion WHERE angreifer_fraktion = ? AND verteidiger_fraktion = ?",[frakName, frakName])
+    cursor.execute("DELETE FROM invasion WHERE angreifer_fraktion = ? OR verteidiger_fraktion = ?",[frakName,frakName])
     conn.commit()
     
+def delete_urlaub(datum):
+    cursor.execute("UPDATE urlaub SET urlaub = ? WHERE datum = ?",["False",datum]) #Urlaub erst beenden, wenn er schon gestern abgelaufen ist (damit der letzte Tag inklusive ist)
+    conn.commit()

@@ -16,10 +16,14 @@ FRAKTIONEN = [
     Fraktion("Samurai",587376876184666123,587648705990098947),
 ]
 
-
 def member_rolle_von_fraktion(fraktion_name):
     for fraktion in FRAKTIONEN:
         if fraktion.name == fraktion_name:
+            return fraktion.member_role
+
+def fraktion_id_von_leader_id(leader_id):
+    for fraktion in FRAKTIONEN:
+        if fraktion.leader_role == leader_id:
             return fraktion.member_role
 
 def leader_rolle_von_fraktion(fraktion_name):
@@ -31,6 +35,11 @@ def fraktion_von_rolle(rollen_id):
     for fraktion in FRAKTIONEN:
         if fraktion.member_role == rollen_id or fraktion.leader_role == rollen_id:
             return fraktion.name
+
+def id_von_fraktion(rolle):
+    for fraktion in FRAKTIONEN:
+        if fraktion.name == rolle:
+            return fraktion.member_role
 
 def get_rollen_ids():
     return [fraktion.member_role for fraktion in FRAKTIONEN]
@@ -46,6 +55,9 @@ def alle_leader_rollen():
 
 def get_FRAKTIONEN():
     return FRAKTIONEN
+
+def get_projekt_leitung_rolle():
+    return [594493151234883602,596415320390893588]
 
 def get_projekt_leitung():
     return [521087967402655767,184385677301907456,442350475950424104,235492603028570112]

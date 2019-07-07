@@ -63,8 +63,13 @@ async def authorcheck(self,autor):
     return False
     
 async def fcheck(self,autor,mention):
-    return bool(list(filter(lambda role : role.id in map(lambda f : f.member_id, filter(lambda f : f.leader_id in [role.id for role in autor.roles],get_FRAKTIONEN())),mention.roles)))
-
+    #return bool(list(filter(lambda role : role.id in map(lambda f : f.member_id, filter(lambda f : f.leader_id in [role.id for role in autor.roles],get_FRAKTIONEN())),mention.roles)))
+    for item in [a.id for a in autor.roles]:
+         if item in alle_leader_rollen():
+             for rolle in [r.id for r in mention.roles]:
+                 if rolle == fraktion_id_von_leader_id(item):
+                     return rolle
+             return False
 
 def rollencheck(fraktion,member):
     for item in [z.id for z in member.roles]:
@@ -97,9 +102,9 @@ async def autocheck(self):
             await asyncio.sleep(2)
             z += 1"""
         
-        
-        cursor.execute("UPDATE urlaub SET urlaub = False WHERE datum = ?",[str(heute + timedelta(days-1))]) #Urlaub erst beenden, wenn er schon gestern abgelaufen ist (damit der letzte Tag inklusive ist)
-        conn.commit()
+        delete_urlaub(str(heute))
+        # cursor.execute("UPDATE urlaub SET urlaub = False WHERE datum = ?",[str(heute + timedelta(days-1))]) #Urlaub erst beenden, wenn er schon gestern abgelaufen ist (damit der letzte Tag inklusive ist)
+        # conn.commit()
         await asyncio.sleep(1800)
 
 class MyClient(discord.Client):
@@ -146,7 +151,7 @@ class MyClient(discord.Client):
                     await person.remove_roles(message.guild.get_role(spieler),reason = "Fraktionsleiter hat ihn rausgeworfen",atomic=True)
                     #await message.channel.send(str(person.nick) + " wurde aus deiner Fraktion geworfen")
                     channel = self.get_channel(channels["fraktionswechsel"])
-                    await channel.send(f"{person} wurde aus der fraktion {fraktion_von_rolle[spieler]} geworfen")
+                    await channel.send(f"{person} wurde aus der fraktion {fraktion_von_rolle(spieler)} geworfen")
                     await person.add_roles(discord.utils.get(message.guild.roles,name = "noch keine Fraktion"),reason = "Aus der Fraktion geworfen",atomic=True)
                     log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
             
@@ -171,11 +176,13 @@ class MyClient(discord.Client):
             await message.channel.send("10 Sekunden sind um")
         
         if message.content.lower() == "!fraktionsverteilung":
+            #print(alle_fraktionen())
             rollenanzahl = {name:0 for name in alle_fraktionen()}
+            #print(rollenanzahl.keys())
             
             for member in message.guild.members:
                 for rolle in rollenanzahl.keys():
-                    rollenanzahl[rolle] += rollencheck(fraktion_von_rolle(rolle),member)
+                    rollenanzahl[rolle] += rollencheck(id_von_fraktion(rolle),member)
                     
                     
             nachricht = "\n".join([f"{rolle}: {rollenanzahl[rolle]}" for rolle in rollenanzahl])
@@ -323,8 +330,9 @@ class MyClient(discord.Client):
                 #set_urlaub(frakName,"True")
                 #set_urlaub_mit_datum(frakName,"True",str(datetime.datetime.now().date()))
                 
-                cursor.execute("DELETE FROM invasion WHERE angreifer_fraktion = ? OR verteidiger_fraktion = ?",[frakName,frakName])
-                conn.commit()
+                delete_invasions_urlaub(frakName)
+                # cursor.execute("DELETE FROM invasion WHERE angreifer_fraktion = ? OR verteidiger_fraktion = ?",[frakName,frakName])
+                # conn.commit()
                 #date
 
                 #Aktueller Tag inklusive + 6 Folgetage (inkl)
@@ -397,7 +405,6 @@ class MyClient(discord.Client):
 !festungen
 !fraktionslose
 !leave
-!festungen
 !urlauber
 !invasionen
 **----------Commands für Könige/Fraktionsleiter----------**
@@ -419,17 +426,20 @@ class MyClient(discord.Client):
         
         if message.content.startswith("!add"):
             cursor.execute("SELECT leiter_rollen_id FROM fraktionen")
-            lrid = [x[0] for x in cursor.fetchall()]#Put Tuple values into List               
+            lrid_tuple = cursor.fetchall()
+            lrid = [x[0] for x in lrid_tuple]#Put Tuple values into List               
             for rollen in lrid:
                 if int(rollen) in [h.id for h in message.author.roles]:                   
                     cursor.execute("SELECT rollen_id FROM fraktionen WHERE leiter_rollen_id = ?",[rollen])#Get rollen_id
                     ID = cursor.fetchone()[0]#Get Tuple Value
                     ID = int(ID)
                     user = message.mentions[0]
+                    channel = message.guild.get_channel(594852463727869952)
                     if 587406516567539801 in [h.id for h in message.guild.get_member(user.id).roles]:
                         await user.add_roles(message.guild.get_role(ID),reason = "Fraktionsbeitritt durch Könige",atomic=True)
                         await user.remove_roles(message.guild.get_role(587406516567539801),reason ="Fraktionsbeitritt durch Könige",atomic=True)
-                        await message.channel.send(str(user)+ " wurde der fraktion hinzugefügt!")
+                        await message.channel.send(str(user)+ " wurde der Fraktion %s hinzugefügt!" % fraktion_von_rolle(ID))
+                        await channel.send(str(user)+ " wurde der Fraktion %s hinzugefügt!" % fraktion_von_rolle(ID))
                         log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
          
         if message.content.lower() == "!fraktionslose":
@@ -444,14 +454,17 @@ class MyClient(discord.Client):
             def check(m):
                 return m.content and m.channel
             for r in [b.id for b in message.author.roles]:
-                if r in get_projekt_leitung():
+                if r in get_projekt_leitung_rolle():
                     msd = await message.channel.send("Bist du dir Sicher? Antworte mit ja oder nein!")
                     msg = await self.wait_for('message',check=check)
                     if msg.content.lower() == "ja":
                         log(message.author,message.author.id,message.content,message.channel,datetime.datetime.now())
+                        #await msd.delete()
                         await message.channel.purge(limit=int(anzahl[1]) + 3)
+                        return
                     elif msg.content.lower() == "nein":
                         await message.channel.send("Abgebrochen")
+                        return
         
         if message.content.lower() == "!givedeveloper":#Für Testzwecke falls ich den Server leave dann kann ich mir diese Rolle wiedergeben
             if message.author.id == 235492603028570112:
@@ -496,10 +509,10 @@ class MyClient(discord.Client):
                 msg = message.content
                 fraktion = fraktionsnamen_parsen(msg.split(",")[1].split())
                 cursor.execute("SELECT fraktion FROM fraktionen")
-                alle_fraktionen = cursor.fetchall()
-                alle_fraktionen = [x[0] for x in alle_fraktionen]
+                xxxx = cursor.fetchall()
+                xxxx = [x[0] for x in xxxx]
                 #print(fraktion)
-                if not(fraktion in alle_fraktionen):
+                if not(fraktion in xxxx):
                     await message.channel.send("Diese Fraktion gibt es nicht!")
                     return
 
