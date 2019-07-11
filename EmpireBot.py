@@ -357,6 +357,8 @@ class MyClient(discord.Client):
             await message.channel.send(festungen())
         
         if message.content.lower() == "!contest":
+            
+            
             fraktion = frakCheck(message.author)
             frakName = fraktionVonID(str(fraktion))
             cursor.execute("SELECT contested FROM contests WHERE fraktion = ?",[frakName])
@@ -407,6 +409,7 @@ class MyClient(discord.Client):
 !leave
 !urlauber
 !invasionen
+!info
 **----------Commands für Könige/Fraktionsleiter----------**
 !invasion Festung, Samstag/Sonntag hh:mm
 !remove @<player>
@@ -421,8 +424,15 @@ class MyClient(discord.Client):
 !unurlaub, <fraktion>
 !reseturlaub, <fraktion>"""
             await message.channel.send(hilfe)
-            
-                    
+
+        if message.content.lower() == "!info":
+            infos = """**----Konzept----**
+<https://www.youtube.com/watch?v=4UTzeUDiJhI>
+**----FAQ----**
+<https://www.youtube.com/watch?v=FXjsE_ElhFw>
+**----Fraktionen----**  
+<https://www.youtube.com/watch?v=lKIrEsUsNac>"""
+            await message.channel.send(infos)
         
         if message.content.startswith("!add"):
             cursor.execute("SELECT leiter_rollen_id FROM fraktionen")
@@ -434,7 +444,7 @@ class MyClient(discord.Client):
                     ID = cursor.fetchone()[0]#Get Tuple Value
                     ID = int(ID)
                     user = message.mentions[0]
-                    channel = message.guild.get_channel(594852463727869952)
+                    channel = message.guild.get_channel(588769134158807243)
                     if 587406516567539801 in [h.id for h in message.guild.get_member(user.id).roles]:
                         await user.add_roles(message.guild.get_role(ID),reason = "Fraktionsbeitritt durch Könige",atomic=True)
                         await user.remove_roles(message.guild.get_role(587406516567539801),reason ="Fraktionsbeitritt durch Könige",atomic=True)
@@ -550,15 +560,22 @@ class MyClient(discord.Client):
                     guild = self.get_guild(payload.guild_id)
                     #message = guild.get_message(payload.message_id)
                     spieler = guild.get_member(payload.user_id)
-                    await spieler.send("Um dem Mystischen Orden beizutreten musst du dich bei @Dr_EckigLP#8801 melden")
+                    await spieler.send("Um dem Mystischem Orden beizutreten musst du dich bei @Dr_EckigLP#8801 melden")
                     return
-                    
-            for fraktionsname in ["Nordmänner","Piraten","Ägypter","Ureinwohner","Mongolen","Samurai","Dunkelritter","Wilder Bergstamm"]:
+            
+            for fraktionsname in ["Wilder Bergstamm","Piraten","Ureinwohner","Nordmänner","Dunkelritter","Samurai"]:
+                if payload.message_id == fraktionsbeitritt_message[fraktionsname]:
+                    if not (await check(self,payload)):
+                        guild = self.get_guild(payload.guild_id)
+                        spieler = guild.get_member(payload.user_id)
+                        await spieler.send("Die %s sind geschlossen ggf. den Fraktionsleiter anschreiben, wenn die Fraktion unter 35 oder unter 50 Mitglieder hat!" % fraktionsname)
+                        return
+            
+            for fraktionsname in ["Ägypter","Mongolen"]:
                 if payload.message_id == fraktionsbeitritt_message[fraktionsname]:
                     if not (await check(self,payload)):
                         await giveRole(self,fraktionsname,payload)
                         return
-
 
 client = MyClient()
 client.run(TOKEN)
