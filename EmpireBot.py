@@ -246,11 +246,13 @@ class MyClient(discord.Client):
                 InvStunde = int(stunde)
                 
                 if tagDifferenz == 0:
-                    nowSek = int(heuteZeit.hour)*3600+int(heuteZeit.minute)*60
-                    invSek = InvStunde*3600+ int(minute)*60
-                    if (invSek - nowSek < 72000):
-                        await message.channel.send("Eine Invasion muss 20 Stunden vor Beginn angekündigt werden")
-                        return
+                    await message.channel.send("Invasionen müssen spätestens am Tag vorher angekündigt werden und nicht am Tag der Invasion")
+                    return
+                    # nowSek = int(heuteZeit.hour)*3600+int(heuteZeit.minute)*60
+                    # invSek = InvStunde*3600+ int(minute)*60
+                    # if (invSek - nowSek < 72000):
+                    #     await message.channel.send("Eine Invasion muss 20 Stunden vor Beginn angekündigt werden")
+                    #     return
 
                 #print(InvDatum)
                 #print(InvStunde)
@@ -357,8 +359,14 @@ class MyClient(discord.Client):
             await message.channel.send(festungen())
         
         if message.content.lower() == "!contest":
-            
-            
+            zeit = datetime.datetime.now().time()
+            msgdate = datetime.datetime.now().date()
+            if msgdate.weekday() != 5 or msgdate.weekday() != 6:
+                await message.channel.send("Man kann nur am Wochenende contesten!")
+                return
+            if int(zeit.hour) < 16 or int(zeit.hour) > 20:
+                await message.channel.send("Man kann nur zwischen 16-20 Uhr contesten!")
+                return
             fraktion = frakCheck(message.author)
             frakName = fraktionVonID(str(fraktion))
             cursor.execute("SELECT contested FROM contests WHERE fraktion = ?",[frakName])
@@ -390,10 +398,13 @@ class MyClient(discord.Client):
             contested = cursor.fetchone()[0]
             cursor.execute("SELECT contestor_id FROM contests WHERE fraktion = ?",[frakName])
             contestor = cursor.fetchone()[0]
+            leader_rolle = int(leader_rolle_von_fraktion(frakName))
 
             if message.author.id == int(contested) or message.author.id == int(contestor):
                 set_contest(frakName,"False")
                 await message.channel.send("Herausforderung ist beendet")
+                await message.guild.get_member(int(contested)).add_roles(message.guild.get_role(587954721856421888),reason="uncontest",atomic=True)
+                await message.guild.get_member(int(contested)).add_roles(message.guild.get_role(leader_rolle),reason="uncontest",atomic=True)
             else:
                 await message.channel.send("Du bist nicht der Fraktionsleiter oder der der ihn Herausfordert!")
 
@@ -563,19 +574,28 @@ class MyClient(discord.Client):
                     await spieler.send("Um dem Mystischem Orden beizutreten musst du dich bei @Dr_EckigLP#8801 melden")
                     return
             
-            for fraktionsname in ["Wilder Bergstamm","Piraten","Ureinwohner","Nordmänner","Dunkelritter","Samurai"]:
+            for fraktionsname in ["Wilder Bergstamm","Piraten","Ureinwohner","Nordmänner","Dunkelritter","Samurai","Ägypter","Mongolen"]:
                 if payload.message_id == fraktionsbeitritt_message[fraktionsname]:
                     if not (await check(self,payload)):
                         guild = self.get_guild(payload.guild_id)
                         spieler = guild.get_member(payload.user_id)
-                        await spieler.send("Die %s sind geschlossen ggf. den Fraktionsleiter anschreiben, wenn die Fraktion unter 35 oder unter 50 Mitglieder hat!" % fraktionsname)
-                        return
+                        channel = guild.get_channel(get_bewerbungs_channel(fraktionsname))
+                        await channel.send("Der Spieler %s möchte dieser Fraktion beitreten" %(spieler))
+                        await spieler.send("Du hast dich bei der Fraktion %s beworben. Nun liegt es an dem Fraktionsleiter der Fraktion ob er dich aufnimmt!" % (fraktionsname))
+
+            # for fraktionsname in ["Wilder Bergstamm","Piraten","Ureinwohner","Nordmänner","Dunkelritter","Samurai"]:
+            #     if payload.message_id == fraktionsbeitritt_message[fraktionsname]:
+            #         if not (await check(self,payload)):
+            #             guild = self.get_guild(payload.guild_id)
+            #             spieler = guild.get_member(payload.user_id)
+            #             await spieler.send("Die %s sind geschlossen ggf. den Fraktionsleiter anschreiben, wenn die Fraktion unter 35 oder unter 50 Mitglieder hat!" % fraktionsname)
+            #             return
             
-            for fraktionsname in ["Ägypter","Mongolen"]:
-                if payload.message_id == fraktionsbeitritt_message[fraktionsname]:
-                    if not (await check(self,payload)):
-                        await giveRole(self,fraktionsname,payload)
-                        return
+            # for fraktionsname in ["Ägypter","Mongolen"]:
+            #     if payload.message_id == fraktionsbeitritt_message[fraktionsname]:
+            #         if not (await check(self,payload)):
+            #             await giveRole(self,fraktionsname,payload)
+            #             return
 
 client = MyClient()
 client.run(TOKEN)

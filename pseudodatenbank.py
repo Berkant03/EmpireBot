@@ -1,20 +1,26 @@
 class Fraktion:
-    def __init__(self,name,member_role,leader_role):
+    def __init__(self,name,member_role,leader_role,bewerbungs_channel):
         self.name=name
         self.member_role=member_role
         self.leader_role=leader_role
+        self.bewerbungs_channel=bewerbungs_channel
 
 FRAKTIONEN = [
-    Fraktion("Nordmänner",587376412625731614,587649118978179072),
-    Fraktion("Wilder Bergstamm",587376373849522257,587648048641867776),
-    Fraktion("Piraten",587376215162355743,587648225360740384),
-    Fraktion("Ägypter",587376337077927956,587648422761463818),
-    Fraktion("Ureinwohner",587376464815456398,587648931920347136),
-    Fraktion("Mystischer Orden",587376621846265896,587648869551308801),
-    Fraktion("Mongolen",587376695691051017,587648819680903171),
-    Fraktion("Dunkelritter",587376791170187274,587648591548383232),
-    Fraktion("Samurai",587376876184666123,587648705990098947),
+    Fraktion("Nordmänner",587376412625731614,587649118978179072,598904407316365325),
+    Fraktion("Wilder Bergstamm",587376373849522257,587648048641867776,598903112161296394),
+    Fraktion("Piraten",587376215162355743,587648225360740384,598904580067295232),
+    Fraktion("Ägypter",587376337077927956,587648422761463818,598904964143906864),
+    Fraktion("Ureinwohner",587376464815456398,587648931920347136,598904758065037319),
+    Fraktion("Mystischer Orden",587376621846265896,587648869551308801,598904133927305216),
+    Fraktion("Mongolen",587376695691051017,587648819680903171,598903651993387018),
+    Fraktion("Dunkelritter",587376791170187274,587648591548383232,598903423600951336),
+    Fraktion("Samurai",587376876184666123,587648705990098947,598904670999805992)
 ]
+
+def get_bewerbungs_channel(fraktion_name):
+    for fraktion in FRAKTIONEN:
+        if fraktion.name == fraktion_name:
+            return fraktion.bewerbungs_channel
 
 def member_rolle_von_fraktion(fraktion_name):
     for fraktion in FRAKTIONEN:

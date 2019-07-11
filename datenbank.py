@@ -63,8 +63,13 @@ def check_urlaub(fraktion):
 
 def urlauber():
     global cursor
-    cursor.execute("SELECT fraktion,urlaub FROM urlaub")
-    return "\n".join([x[0] + " : " +  x[1] for x in cursor.fetchall()])
+    cursor.execute("SELECT fraktion,datum FROM urlaub WHERE urlaub = ?",["True"])
+    urlauber_list = cursor.fetchall()
+    if "\n".join(["Die Fraktion " + x[0] + " ist bis zum " + x[1] +" im Urlaub" for x in urlauber_list]) == "":
+        return "Es gibt keine Fraktion, welche im Urlaub sind"
+    else:
+        return "\n".join(["Die Fraktion " + x[0] + "ist bis zum " + x[1] +" im Urlaub" for x in urlauber_list])
+    # return "\n".join([x[0] + " : " +  x[1] for x in cursor.fetchall()])
 
 def fraktions_liste():
     global cursor
