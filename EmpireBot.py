@@ -391,6 +391,22 @@ class MyClient(discord.Client):
             cursor.execute("UPDATE contests SET contestor_id = ? WHERE fraktion = ?",[str(message.author.id),frakName])
             conn.commit()
 
+        if message.content.startswith("!finishcontest"):
+            if message.author.id in get_projekt_leitung():
+                frakName = fraktionsnamen_parsen(message.content.split(",")[1])
+                
+                cursor.execute("SELECT contested_id FROM contests WHERE fraktion = ?",[frakName])
+                contested = cursor.fetchone()[0]
+                cursor.execute("SELECT contestor_id FROM contests WHERE fraktion = ?",[frakName])
+                contestor = cursor.fetchone()[0]
+
+                leader_rolle = int(leader_rolle_von_fraktion(frakName))
+                fraktionsleitung = message.guild.get_role(587954721856421888)
+
+                await message.guild.get_member(int(contestor)).add_roles(message.guild.get_role(leader_rolle),reason="!finishcontest",atomic=True)
+                await message.guild.get_member(int(contestor)).add_roles(fraktionsleitung,reason="!fiinishcontest",atomic=True)
+
+
         if message.content.lower() == "!uncontest":
             fraktion = frakCheck(message.author)
             frakName = fraktionVonID(str(fraktion))
@@ -399,6 +415,7 @@ class MyClient(discord.Client):
             cursor.execute("SELECT contestor_id FROM contests WHERE fraktion = ?",[frakName])
             contestor = cursor.fetchone()[0]
             leader_rolle = int(leader_rolle_von_fraktion(frakName))
+            fraktionsleitung = message.guild.get_role(587954721856421888)
 
             if message.author.id == int(contested) or message.author.id == int(contestor):
                 set_contest(frakName,"False")
@@ -433,7 +450,8 @@ class MyClient(discord.Client):
 !festungsnamenändern, <Fraktion>,<neuerFestungsName>
 !purge <anzahl>
 !unurlaub, <fraktion>
-!reseturlaub, <fraktion>"""
+!reseturlaub, <fraktion>
+!finishcontest, <fraktion>"""
             await message.channel.send(hilfe)
 
         if message.content.lower() == "!info":
